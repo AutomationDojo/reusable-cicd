@@ -42,7 +42,7 @@ permissions:
 
 jobs:
   release:
-    uses: user-cube/reusable-cicd/.github/workflows/golang-cli-apps/release.yaml@main
+    uses: user-cube/reusable-cicd/.github/workflows/golang-cli-apps_release.yml@main
     secrets:
       DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
       DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}

@@ -25,14 +25,13 @@ on:
         description: "Go sum file to use"
         type: string
         default: "go.sum"
-
-secrets:
-  DEVOPS_BUDDY_APP_ID:
-    description: "GitHub App ID"
-    required: true
-  DEVOPS_BUDDY_PRIVATE_KEY:
-    description: "GitHub App private key"
-    required: true
+    secrets:
+      DEVOPS_BUDDY_APP_ID:
+        description: "GitHub App ID"
+        required: true
+      DEVOPS_BUDDY_PRIVATE_KEY:
+        description: "GitHub App private key"
+        required: true
 
 concurrency:
   group: release-${{ github.ref }}
