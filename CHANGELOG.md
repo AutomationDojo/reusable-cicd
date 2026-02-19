@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/user-cube/reusable-cicd/compare/v1.0.0...v1.0.1) (2026-02-19)
+
+
+### Bug Fixes
+
+* fix workflows path ([f5ce63f](https://github.com/user-cube/reusable-cicd/commit/f5ce63f2a5a3411dfca54585285a8db859d8b82e))
+
 # 1.0.0 (2026-02-19)
 
 
