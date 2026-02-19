@@ -1,0 +1,27 @@
+site_name: Reusable CI/CD
+site_url: https://reusable-cicd.ruicoelho.dev
+repo_url: https://github.com/ruicoelho/reusable-cicd
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - search.highlight
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Workflows:
+      - Golang CLI Release: workflows/golang-cli-release.md
