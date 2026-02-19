@@ -17,13 +17,22 @@ on:
         description: "Node.js version for semantic-release"
         type: string
         default: "24"
-    secrets:
-      DEVOPS_BUDDY_APP_ID:
-        description: "GitHub App ID"
-        required: true
-      DEVOPS_BUDDY_PRIVATE_KEY:
-        description: "GitHub App private key"
-        required: true
+      go-version-file:
+        description: "Go version file to use"
+        type: string
+        default: "go.mod"
+      go-sum-file:
+        description: "Go sum file to use"
+        type: string
+        default: "go.sum"
+
+secrets:
+  DEVOPS_BUDDY_APP_ID:
+    description: "GitHub App ID"
+    required: true
+  DEVOPS_BUDDY_PRIVATE_KEY:
+    description: "GitHub App private key"
+    required: true
 
 concurrency:
   group: release-${{ github.ref }}
@@ -84,8 +93,8 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
-          cache-dependency-path: go.sum
+          go-version-file: ${{ inputs.go-version-file }}
+          cache-dependency-path: ${{ inputs.go-sum-file }}
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6

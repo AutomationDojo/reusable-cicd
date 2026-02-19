@@ -1,0 +1,30 @@
+# Reusable workflow for linting GitHub Actions workflows.
+# The caller must set `permissions: contents: read, pull-requests: write`.
+name: Actionlint
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+    inputs:
+      reporter:
+        description: "reviewdog reporter to use"
+        type: string
+        default: "github-pr-review"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: actionlint
+        uses: reviewdog/action-actionlint@v1
+        with:
+          reporter: ${{ inputs.reporter || 'github-pr-review' }}

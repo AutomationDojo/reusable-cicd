@@ -9,6 +9,8 @@ Reusable workflow that automates the release process for Go CLI applications. It
 | `homebrew-tap-repo` | `string` | `homebrew-tap` | Repository name for the Homebrew tap app token |
 | `goreleaser-version` | `string` | `nightly` | GoReleaser version to use |
 | `node-version` | `string` | `24` | Node.js version for semantic-release |
+| `go-version-file` | `string` | `go.mod` | Go version file to use |
+| `go-sum-file` | `string` | `go.sum` | Go sum file to use |
 
 ## Secrets
 
@@ -40,8 +42,12 @@ permissions:
 
 jobs:
   release:
-    uses: ruicoelho/reusable-cicd/.github/workflows/golang-cli-apps/release.yaml@main
+    uses: user-cube/reusable-cicd/.github/workflows/golang-cli-apps/release.yaml@main
     secrets:
       DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
       DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+    with:
+      homebrew-tap-repo: "homebrew-tap"
+      go-version-file: go.mod
+      go-sum-file: go.sum
 ```

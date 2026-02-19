@@ -1,0 +1,45 @@
+# Reusable workflow for building and testing Go CLI apps on PRs.
+# The caller must set `permissions: contents: read, pull-requests: read`.
+name: Build and Test on PR
+
+on:
+  workflow_call:
+    inputs:
+      go-version-file:
+        description: "Go version file to use"
+        type: string
+        default: "go.mod"
+      go-sum-file:
+        description: "Go sum file to use"
+        type: string
+        default: "go.sum"
+      golangci-lint-version:
+        description: "golangci-lint version to use"
+        type: string
+        default: "latest"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ${{ inputs.go-version-file }}
+          cache-dependency-path: ${{ inputs.go-sum-file }}
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: ${{ inputs.golangci-lint-version }}
+
+      - name: Build
+        run: go build -v
