@@ -11,19 +11,10 @@ on:
         description: "Space-separated list of pip packages to install"
         type: string
         default: "mkdocs-material"
-      concurrency-group:
-        description: "Concurrency group name for pages deployment"
-        type: string
-        default: "pages"
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
-concurrency:
-  group: ${{ inputs.concurrency-group }}
-  cancel-in-progress: false
 
 jobs:
   docs-build:

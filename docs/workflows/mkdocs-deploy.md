@@ -10,8 +10,6 @@ The workflow runs in two jobs: `docs-build` compiles the site and uploads the ar
 |------|------|---------|-------------|
 | `python-version` | `string` | `3.x` | Python version to use |
 | `mkdocs-packages` | `string` | `mkdocs-material` | Space-separated list of pip packages to install |
-| `concurrency-group` | `string` | `pages` | Concurrency group name for pages deployment |
-
 ## Caller Permissions
 
 The calling workflow **must** set:
