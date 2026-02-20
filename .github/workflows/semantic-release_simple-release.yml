@@ -1,0 +1,62 @@
+# Reusable workflow for simple semantic releases.
+# The caller must set `permissions: contents: write`.
+name: Simple Semantic Release
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: "Node.js version for semantic-release"
+        type: string
+        default: "24"
+      extra-plugins:
+        description: "Newline-separated list of extra semantic-release plugins"
+        type: string
+        default: |
+          @semantic-release/changelog
+          @semantic-release/git
+    secrets:
+      DEVOPS_BUDDY_APP_ID:
+        description: "GitHub App ID"
+        required: true
+      DEVOPS_BUDDY_PRIVATE_KEY:
+        description: "GitHub App private key"
+        required: true
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      new-release: ${{ steps.semantic.outputs.new_release_published }}
+      version: ${{ steps.semantic.outputs.new_release_version }}
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
+          private-key: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+
+      - name: Setup Git (bot da App)
+        run: |
+          git config --global user.name "${{ steps.app.outputs.app-slug }}[bot]"
+          git config --global user.email "${{ steps.app.outputs.app-slug }}[bot]@users.noreply.github.com"
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app.outputs.token }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          extra_plugins: ${{ inputs.extra-plugins }}
+        env:
+          GITHUB_TOKEN: ${{ steps.app.outputs.token }}

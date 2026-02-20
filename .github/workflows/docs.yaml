@@ -17,64 +17,11 @@ concurrency:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
-    outputs:
-      new-release: ${{ steps.semantic.outputs.new_release_published }}
-      version: ${{ steps.semantic.outputs.new_release_version }}
-      token: ${{ steps.app.outputs.token }}
-    steps:
-      - uses: actions/create-github-app-token@v2
-        id: app
-        with:
-          app-id: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-          private-key: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+    uses: user-cube/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
+    secrets:
+      DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
+      DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
 
-      - name: Setup Git (bot da App)
-        run: |
-          git config --global user.name "${{ steps.app.outputs.app-slug }}[bot]"
-          git config --global user.email "${{ steps.app.outputs.app-slug }}[bot]@users.noreply.github.com"
-
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          token: ${{ steps.app.outputs.token }}
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-
-      - id: semantic
-        uses: cycjimmy/semantic-release-action@v4
-        with:
-          extra_plugins: |
-            @semantic-release/changelog
-            @semantic-release/git
-        env:
-          GITHUB_TOKEN: ${{ steps.app.outputs.token }}
-  docs-build:
-    runs-on: ubuntu-latest
+  docs:
     needs: release
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.x"
-
-      - run: pip install mkdocs-material
-
-      - run: mkdocs build
-
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: site/
-
-  docs-deploy:
-    runs-on: ubuntu-latest
-    needs: docs-build
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+    uses: user-cube/reusable-cicd/.github/workflows/mkdocs_deploy.yml@main

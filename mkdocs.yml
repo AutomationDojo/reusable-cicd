@@ -27,3 +27,5 @@ nav:
       - Actionlint: workflows/actionlint.md
       - Golang CLI Build and Test: workflows/golang-cli-build-and-test.md
       - Golang CLI Release: workflows/golang-cli-release.md
+      - MkDocs Deploy: workflows/mkdocs-deploy.md
+      - Simple Semantic Release: workflows/semantic-release-simple.md
