@@ -29,3 +29,4 @@ nav:
       - Golang CLI Release: workflows/golang-cli-release.md
       - MkDocs Deploy: workflows/mkdocs-deploy.md
       - Simple Semantic Release: workflows/semantic-release-simple.md
+      - Terraform Docs: workflows/terraform-docs.md
