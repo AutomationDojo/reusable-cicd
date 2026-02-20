@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/user-cube/reusable-cicd/compare/v1.1.1...v1.2.0) (2026-02-20)
+
+
+### Features
+
+* terraform docs workflow ([087bb0a](https://github.com/user-cube/reusable-cicd/commit/087bb0a81d52c29b8781c94ee0500d3480ec603f))
+
 ## [1.1.1](https://github.com/user-cube/reusable-cicd/compare/v1.1.0...v1.1.1) (2026-02-20)
 
 
