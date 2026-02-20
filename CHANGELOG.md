@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/user-cube/reusable-cicd/compare/v1.0.1...v1.1.0) (2026-02-20)
+
+
+### Features
+
+* add new actions ([c6c2282](https://github.com/user-cube/reusable-cicd/commit/c6c2282b60f9f61fae9b1830f07197aeedc6e2f0))
+
 ## [1.0.1](https://github.com/user-cube/reusable-cicd/compare/v1.0.0...v1.0.1) (2026-02-19)
 
 
