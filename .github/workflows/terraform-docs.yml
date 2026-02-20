@@ -21,11 +21,7 @@ on:
         description: "Commit message prefix for docs updates"
         type: string
         default: "docs: update terraform-docs"
-
-concurrency:
-  group: terraform-docs-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
+        
 permissions:
   contents: write
   pull-requests: write
