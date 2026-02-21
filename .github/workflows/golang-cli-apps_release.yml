@@ -96,7 +96,7 @@ jobs:
           cache-dependency-path: ${{ inputs.go-sum-file }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: ${{ inputs.goreleaser-version }}
           args: release --clean
