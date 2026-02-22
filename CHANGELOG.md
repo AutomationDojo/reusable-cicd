@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/user-cube/reusable-cicd/compare/v1.3.1...v1.3.2) (2026-02-22)
+
+
+### Bug Fixes
+
+* remove concurrency ([608483f](https://github.com/user-cube/reusable-cicd/commit/608483f20a8fcdec4885b6e869c2409711f0e620))
+
 ## [1.3.1](https://github.com/user-cube/reusable-cicd/compare/v1.3.0...v1.3.1) (2026-02-22)
 
 
