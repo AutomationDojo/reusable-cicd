@@ -1,0 +1,41 @@
+name: Cleanup Cloudflare Deployments
+
+on:
+  workflow_call:
+    secrets:
+      CF_API_TOKEN:
+        description: "Cloudflare API token"
+        required: true
+      CF_ACCOUNT_ID:
+        description: "Cloudflare account ID"
+        required: true
+      CF_PAGES_PROJECT_NAME:
+        description: "Cloudflare Pages project name"
+        required: true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download cleanup script
+        run: |
+          curl -L -o delete-all-deployments.zip https://pub-505c82ba1c844ba788b97b1ed9415e75.r2.dev/delete-all-deployments.zip
+          unzip delete-all-deployments.zip
+          ls -la
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Run cleanup script
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_PAGES_PROJECT_NAME: ${{ secrets.CF_PAGES_PROJECT_NAME }}
+          CF_DELETE_ALIASED_DEPLOYMENTS: 'true'
+        run: npm start
