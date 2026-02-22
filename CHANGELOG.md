@@ -1,3 +1,11 @@
+## [1.3.1](https://github.com/user-cube/reusable-cicd/compare/v1.3.0...v1.3.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* Merge branch 'main' of github.com:user-cube/reusable-cicd ([3062218](https://github.com/user-cube/reusable-cicd/commit/30622186494474fbdaab18852049d0f72a3511d2))
+* update goreleaser version ([85c4bab](https://github.com/user-cube/reusable-cicd/commit/85c4bab8e011abce56c156952629110ac7d18c31))
+
 # [1.3.0](https://github.com/user-cube/reusable-cicd/compare/v1.2.0...v1.3.0) (2026-02-22)
 
 
