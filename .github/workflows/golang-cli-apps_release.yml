@@ -12,7 +12,7 @@ on:
       goreleaser-version:
         description: "GoReleaser version to use"
         type: string
-        default: "nightly"
+        default: "2.14.0"
       node-version:
         description: "Node.js version for semantic-release"
         type: string
@@ -96,7 +96,7 @@ jobs:
           cache-dependency-path: ${{ inputs.go-sum-file }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: ${{ inputs.goreleaser-version }}
           args: release --clean
