@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/user-cube/reusable-cicd/compare/v1.2.0...v1.3.0) (2026-02-22)
+
+
+### Features
+
+* cloudflare deployment deletion ([378815a](https://github.com/user-cube/reusable-cicd/commit/378815a260d87bc649ebad5347e4183ab201ed70))
+
 # [1.2.0](https://github.com/user-cube/reusable-cicd/compare/v1.1.1...v1.2.0) (2026-02-20)
 
 
