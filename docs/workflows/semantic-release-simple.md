@@ -27,6 +27,16 @@ permissions:
   contents: write
 ```
 
+## Concurrency
+
+It is recommended to set concurrency in the **calling** workflow to prevent parallel releases:
+
+```yaml
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+```
+
 ## Usage
 
 ```yaml
@@ -38,6 +48,10 @@ on:
 
 permissions:
   contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:

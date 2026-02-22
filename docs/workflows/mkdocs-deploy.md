@@ -21,6 +21,16 @@ permissions:
   id-token: write
 ```
 
+## Concurrency
+
+Since this workflow deploys to GitHub Pages, it is recommended to set concurrency in the **calling** workflow to avoid overlapping deployments:
+
+```yaml
+concurrency:
+  group: pages
+  cancel-in-progress: false
+```
+
 ## Usage
 
 ```yaml
@@ -34,6 +44,10 @@ permissions:
   contents: read
   pages: write
   id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   mkdocs-deploy:

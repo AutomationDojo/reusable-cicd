@@ -28,6 +28,16 @@ permissions:
   contents: write
 ```
 
+## Concurrency
+
+Concurrency control should be set in the **calling** workflow. For example:
+
+```yaml
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+```
+
 ## Usage
 
 ```yaml
@@ -39,6 +49,10 @@ on:
 
 permissions:
   contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:

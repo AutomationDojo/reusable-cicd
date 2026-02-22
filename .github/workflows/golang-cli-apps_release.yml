@@ -33,10 +33,6 @@ on:
         description: "GitHub App private key"
         required: true
 
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   release:
     runs-on: ubuntu-latest
