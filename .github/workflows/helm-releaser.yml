@@ -1,0 +1,51 @@
+# Reusable workflow for releasing Helm charts.
+# The caller must set `permissions: contents: write`.
+name: Reusable Helm Releaser
+
+on:
+  workflow_call:
+    inputs:
+      charts_dir:
+        description: 'The directory containing the charts'
+        required: false
+        type: string
+        default: '.'
+    secrets:
+      DEVOPS_BUDDY_APP_ID:
+        description: "GitHub App ID"
+        required: true
+      DEVOPS_BUDDY_PRIVATE_KEY:
+        description: "GitHub App private key"
+        required: true
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
+          private-key: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+
+      - name: Setup Git (bot da App)
+        run: |
+          git config --global user.name "${{ steps.app.outputs.app-slug }}[bot]"
+          git config --global user.email "${{ steps.app.outputs.app-slug }}[bot]@users.noreply.github.com"
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app.outputs.token }}
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
+        with:
+          charts_dir: ${{ inputs.charts_dir }}
+        env:
+          CR_TOKEN: ${{ steps.app.outputs.token }}

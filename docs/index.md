@@ -9,3 +9,4 @@ A collection of reusable GitHub Actions workflows and composite actions for comm
 - [Golang CLI Release](workflows/golang-cli-release.md) — Automate semantic versioning and GoReleaser-based releases for Go CLI applications.
 - [MkDocs Deploy](workflows/mkdocs-deploy.md) — Build and deploy MkDocs sites to GitHub Pages.
 - [Simple Semantic Release](workflows/semantic-release-simple.md) — Automate versioning and changelog generation with semantic-release.
+- [Helm Releaser](docs/helm-releaser.md) — Automate packaging and publishing of Helm charts to GitHub Pages.
