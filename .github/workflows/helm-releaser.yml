@@ -143,7 +143,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ steps.app.outputs.token }}
+          password: ${{ github.token }}
 
       - name: Push charts to OCI
         if: inputs.push_oci
