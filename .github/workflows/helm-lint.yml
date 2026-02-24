@@ -1,0 +1,54 @@
+# Reusable workflow for linting Helm charts (chart-testing: ct lint).
+# Uses helm/chart-testing-action; requires Helm and Python for yamllint/yamale.
+name: Helm Lint
+
+on:
+  workflow_call:
+    inputs:
+      charts_dir:
+        description: 'Directory containing Helm charts (passed to ct as --chart-dirs)'
+        required: false
+        type: string
+        default: '.'
+      config:
+        description: 'Path to chart-testing config (e.g. .github/ct.yaml). If set, ct uses this instead of --chart-dirs'
+        required: false
+        type: string
+        default: ''
+      chart_testing_version:
+        description: 'chart-testing CLI version'
+        required: false
+        type: string
+        default: 'v3.11.0'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.8.0
+        with:
+          version: ${{ inputs.chart_testing_version }}
+
+      - name: Run chart-testing (lint)
+        run: |
+          if [ -n "${{ inputs.config }}" ]; then
+            ct lint --config ${{ inputs.config }}
+          else
+            ct lint --chart-dirs ${{ inputs.charts_dir }}
+          fi

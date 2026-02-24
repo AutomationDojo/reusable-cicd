@@ -1,5 +1,5 @@
 # Reusable workflow for releasing Helm charts.
-# The caller must set `permissions: contents: write`.
+# The caller must set `permissions: contents: write`; add `packages: write` if using push_oci.
 name: Reusable Helm Releaser
 
 on:
@@ -10,6 +10,16 @@ on:
         required: false
         type: string
         default: '.'
+      config:
+        description: 'Path to chart-releaser config file (e.g. .github/cr.yaml)'
+        required: false
+        type: string
+        default: ''
+      push_oci:
+        description: 'Also push chart packages to GitHub Container Registry (ghcr.io)'
+        required: false
+        type: boolean
+        default: false
     secrets:
       DEVOPS_BUDDY_APP_ID:
         description: "GitHub App ID"
@@ -22,6 +32,7 @@ jobs:
   release:
     permissions:
       contents: write
+      packages: ${{ inputs.push_oci && 'write' || 'read' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@v2
@@ -39,13 +50,37 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ steps.app.outputs.token }}
+          persist-credentials: false
+
+      - name: Fetch current Chart Index
+        run: |
+          git fetch origin gh-pages 2>/dev/null && git checkout origin/gh-pages -- index.yaml 2>/dev/null || true
+        continue-on-error: true
 
       - name: Install Helm
         uses: azure/setup-helm@v4
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
+        uses: helm/chart-releaser-action@v1.7.0
         with:
           charts_dir: ${{ inputs.charts_dir }}
+          config: ${{ inputs.config }}
         env:
           CR_TOKEN: ${{ steps.app.outputs.token }}
+
+      - name: Login to GHCR
+        if: inputs.push_oci
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ steps.app.outputs.app-slug }}[bot]
+          password: ${{ steps.app.outputs.token }}
+
+      - name: Push charts to GHCR
+        if: inputs.push_oci
+        run: |
+          shopt -s nullglob
+          for pkg in .cr-release-packages/*.tgz; do
+            [ -n "${pkg:-}" ] || break
+            helm push "${pkg}" "oci://ghcr.io/${{ github.repository }}"
+          done

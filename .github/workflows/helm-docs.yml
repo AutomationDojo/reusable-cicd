@@ -1,0 +1,67 @@
+# Reusable workflow for generating Helm chart docs (helm-docs).
+# The caller must set `permissions: contents: write, pull-requests: write` if using git-push.
+name: Helm Docs
+
+on:
+  workflow_call:
+    inputs:
+      chart_search_root:
+        description: 'Root directory to search recursively for charts'
+        required: false
+        type: string
+        default: '.'
+      values_file:
+        description: 'Values file name to use for each chart (e.g. values.yaml)'
+        required: false
+        type: string
+        default: 'values.yaml'
+      output_file:
+        description: 'Generated markdown filename (e.g. README.md)'
+        required: false
+        type: string
+        default: 'README.md'
+      git_push:
+        description: 'Commit and push generated docs to the current branch'
+        required: false
+        type: boolean
+        default: true
+      git_commit_message:
+        description: 'Commit message for docs updates'
+        required: false
+        type: string
+        default: 'docs: update helm-docs'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Pull latest changes
+        if: github.event_name == 'pull_request'
+        run: git pull --rebase origin "${{ github.head_ref || github.ref_name }}"
+
+      - name: Run helm-docs
+        uses: losisin/helm-docs-github-action@v1
+        with:
+          chart-search-root: ${{ inputs.chart_search_root }}
+          output-file: ${{ inputs.output_file }}
+          values-file: ${{ inputs.values_file }}
+
+      - name: Commit and push
+        if: inputs.git_push
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet && echo "No doc changes" && exit 0
+          git commit -m "${{ inputs.git_commit_message }}"
+          git push origin "HEAD:${{ github.head_ref || github.ref_name }}"
