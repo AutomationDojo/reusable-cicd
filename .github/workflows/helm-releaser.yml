@@ -49,7 +49,7 @@ jobs:
           private-key: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
