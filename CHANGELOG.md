@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/user-cube/reusable-cicd/compare/v1.3.2...v1.4.0) (2026-02-24)
+
+
+### Features
+
+* helm releaser ([6a97a48](https://github.com/user-cube/reusable-cicd/commit/6a97a485b28062c41a4c3678a7c41c96e4c45ad1))
+
 ## [1.3.2](https://github.com/user-cube/reusable-cicd/compare/v1.3.1...v1.3.2) (2026-02-22)
 
 
