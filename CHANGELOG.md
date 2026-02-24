@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/user-cube/reusable-cicd/compare/v1.6.0...v1.7.0) (2026-02-24)
+
+
+### Features
+
+* mkdocs with helm deployment ([27f9aca](https://github.com/user-cube/reusable-cicd/commit/27f9aca75e6e23cdceba49ab9eca0455191ed6e4))
+
 # [1.6.0](https://github.com/user-cube/reusable-cicd/compare/v1.5.17...v1.6.0) (2026-02-24)
 
 
