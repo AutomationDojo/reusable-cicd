@@ -65,8 +65,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref || github.ref }}
           fetch-depth: 0
-          token: ${{ inputs.git_push && steps.app.outputs.token || '' }}
-          persist-credentials: false
+          token: ${{ inputs.git_push && steps.app.outputs.token || github.token }}
 
       - name: Pull latest changes
         if: github.event_name == 'pull_request'

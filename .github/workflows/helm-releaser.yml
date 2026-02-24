@@ -104,18 +104,25 @@ jobs:
         run: |
           owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
           repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
-          args=(
-            --owner "$owner"
-            --git-repo "$repo"
-            --token "${{ steps.app.outputs.token }}"
-            --package-path .cr-release-packages
-            --skip-existing
-            --commit "${{ github.sha }}"
-          )
-          if [[ -n "${{ inputs.config }}" ]]; then
-            args+=(--config "${{ inputs.config }}")
-          fi
-          cr upload "${args[@]}"
+          for chart in "${{ inputs.charts_dir }}"/*/; do
+            if [[ -f "${chart}Chart.yaml" ]]; then
+              args=(
+                --owner "$owner"
+                --git-repo "$repo"
+                --token "${{ steps.app.outputs.token }}"
+                --package-path .cr-release-packages
+                --skip-existing
+                --commit "${{ github.sha }}"
+              )
+              if [[ -f "${chart}CHANGELOG.md" ]]; then
+                args+=(--release-notes-file "${chart}CHANGELOG.md")
+              fi
+              if [[ -n "${{ inputs.config }}" ]]; then
+                args+=(--config "${{ inputs.config }}")
+              fi
+              cr upload "${args[@]}"
+            fi
+          done
 
       - name: Update chart index
         run: |
