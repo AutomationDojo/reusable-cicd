@@ -1,3 +1,10 @@
+## [1.5.7](https://github.com/user-cube/reusable-cicd/compare/v1.5.6...v1.5.7) (2026-02-24)
+
+
+### Bug Fixes
+
+* update chart structure ([02696a5](https://github.com/user-cube/reusable-cicd/commit/02696a5383ebe482bac74fd1f6996090e290b7d5))
+
 ## [1.5.6](https://github.com/user-cube/reusable-cicd/compare/v1.5.5...v1.5.6) (2026-02-24)
 
 
