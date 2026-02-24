@@ -15,6 +15,13 @@ on:
         default: |
           @semantic-release/changelog
           @semantic-release/git
+    outputs:
+      new-release:
+        description: "Whether a new release was published"
+        value: ${{ jobs.release.outputs.new-release }}
+      version:
+        description: "The new release version"
+        value: ${{ jobs.release.outputs.version }}
     secrets:
       DEVOPS_BUDDY_APP_ID:
         description: "GitHub App ID"
