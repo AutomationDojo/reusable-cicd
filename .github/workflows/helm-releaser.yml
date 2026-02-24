@@ -84,24 +84,14 @@ jobs:
           mkdir -p .cr-release-packages
           cr package "${{ inputs.charts_dir }}" "${args[@]}" --package-path .cr-release-packages
 
-      - name: Upload chart release
-        run: |
-          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
-          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
-          cr upload --owner "$owner" --repo "$repo" \
-            --token "${{ steps.app.outputs.token }}" \
-            --package-path .cr-release-packages \
-            --skip-existing
-
-      - name: Update chart index
-        run: |
-          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
-          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
-          cr index --owner "$owner" --repo "$repo" \
-            --token "${{ steps.app.outputs.token }}" \
-            --package-path .cr-release-packages \
-            --index-path index.yaml \
-            --push
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.7.0
+        with:
+          charts_dir: ${{ inputs.charts_dir }}
+          config: ${{ inputs.config }}
+          skip_existing: true
+        env:
+          CR_TOKEN: ${{ steps.app.outputs.token }}
 
       - name: Login to GHCR
         if: inputs.push_oci
