@@ -1,3 +1,10 @@
+## [1.5.15](https://github.com/user-cube/reusable-cicd/compare/v1.5.14...v1.5.15) (2026-02-24)
+
+
+### Bug Fixes
+
+* push to oci ([f073dcd](https://github.com/user-cube/reusable-cicd/commit/f073dcdee9aade33181dca25607430e6e7b105e6))
+
 ## [1.5.14](https://github.com/user-cube/reusable-cicd/compare/v1.5.13...v1.5.14) (2026-02-24)
 
 
