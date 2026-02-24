@@ -1,3 +1,10 @@
+## [1.5.16](https://github.com/user-cube/reusable-cicd/compare/v1.5.15...v1.5.16) (2026-02-24)
+
+
+### Bug Fixes
+
+* update helm actions ([54a5453](https://github.com/user-cube/reusable-cicd/commit/54a5453cd9446e62240559f17fee985c3c96e17d))
+
 ## [1.5.15](https://github.com/user-cube/reusable-cicd/compare/v1.5.14...v1.5.15) (2026-02-24)
 
 
