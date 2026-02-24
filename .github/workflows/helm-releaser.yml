@@ -83,15 +83,20 @@ jobs:
       - name: Package charts
         run: |
           mkdir -p .cr-release-packages
-
-          args=()
+      
+          CONFIG_ARGS=()
           if [[ -n "${{ inputs.config }}" ]]; then
-            args+=(--config "${{ inputs.config }}")
+            CONFIG_ARGS+=(--config "${{ inputs.config }}")
           fi
-
-          cr package "${{ inputs.charts_dir }}" \
-            --package-path .cr-release-packages \
-            "${args[@]}"
+      
+          for chart in "${{ inputs.charts_dir }}"/*; do
+            if [[ -f "$chart/Chart.yaml" ]]; then
+              echo "Packaging chart: $chart"
+              cr package "$chart" \
+                --package-path .cr-release-packages \
+                "${CONFIG_ARGS[@]}"
+            fi
+          done
 
       - name: Upload chart releases
         run: |
