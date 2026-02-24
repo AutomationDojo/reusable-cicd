@@ -12,6 +12,17 @@ permissions:
   pull-requests: write
 ```
 
+You must pass the GitHub App secrets (same as Helm Releaser and other workflows that push); they are used for checkout and push when `git_push` is true.
+
+## Secrets
+
+| Secret | Description | Required |
+| :--- | :--- | :--- |
+| `DEVOPS_BUDDY_APP_ID` | GitHub App ID. | Yes |
+| `DEVOPS_BUDDY_PRIVATE_KEY` | GitHub App private key. | Yes |
+
+The workflow uses the app token for checkout and push so commits are attributed to the app bot.
+
 ## Inputs
 
 | Input | Description | Required | Default |
@@ -42,6 +53,9 @@ permissions:
 jobs:
   helm-docs:
     uses: user-cube/reusable-cicd/.github/workflows/helm-docs.yml@main
+    secrets:
+      DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
+      DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
 ```
 
 ### Check-only (no push)
@@ -71,9 +85,12 @@ jobs:
       values_file: "values.yaml"
       output_file: "README.md"
       git_commit_message: "docs: sync helm-docs"
+    secrets:
+      DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
+      DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
 ```
 
 ## How it works
 
 - [helm-docs](https://github.com/norwoodj/helm-docs) discovers charts under `chart_search_root`, reads `Chart.yaml` and the chosen values file, and writes documentation (by default to `README.md`) using its default template or a custom `README.md.gotmpl`.
-- If `git_push` is true, the workflow commits changes and pushes to the current branch (the PR branch when triggered by `pull_request`).
+- If `git_push` is true, the workflow uses the GitHub App token for checkout and push, then commits and pushes to the current branch (the PR branch when triggered by `pull_request`). Commits are attributed to the app bot.

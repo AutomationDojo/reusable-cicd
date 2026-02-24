@@ -1,5 +1,6 @@
 # Reusable workflow for generating Helm chart docs (helm-docs).
-# The caller must set `permissions: contents: write, pull-requests: write` if using git-push.
+# The caller must set `permissions: contents: write, pull-requests: write` if using git_push.
+# When using git_push, pass DEVOPS_BUDDY_APP_ID and DEVOPS_BUDDY_PRIVATE_KEY.
 name: Helm Docs
 
 on:
@@ -30,6 +31,13 @@ on:
         required: false
         type: string
         default: 'docs: update helm-docs'
+    secrets:
+      DEVOPS_BUDDY_APP_ID:
+        description: "GitHub App ID (required when git_push is true)"
+        required: true
+      DEVOPS_BUDDY_PRIVATE_KEY:
+        description: "GitHub App private key (required when git_push is true)"
+        required: true
 
 permissions:
   contents: write
@@ -39,11 +47,26 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/create-github-app-token@v2
+        id: app
+        if: inputs.git_push
+        with:
+          app-id: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
+          private-key: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+
+      - name: Setup Git (bot da App)
+        if: inputs.git_push
+        run: |
+          git config --global user.name "${{ steps.app.outputs.app-slug }}[bot]"
+          git config --global user.email "${{ steps.app.outputs.app-slug }}[bot]@users.noreply.github.com"
+
       - name: Checkout
         uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.ref || github.ref }}
           fetch-depth: 0
+          token: ${{ inputs.git_push && steps.app.outputs.token || '' }}
+          persist-credentials: false
 
       - name: Pull latest changes
         if: github.event_name == 'pull_request'
@@ -59,8 +82,6 @@ jobs:
       - name: Commit and push
         if: inputs.git_push
         run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git add -A
           git diff --staged --quiet && echo "No doc changes" && exit 0
           git commit -m "${{ inputs.git_commit_message }}"
