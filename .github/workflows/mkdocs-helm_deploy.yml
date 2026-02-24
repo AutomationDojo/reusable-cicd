@@ -1,0 +1,80 @@
+name: Helm Docs Build and Publish
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        type: string
+        default: "3.x"
+      mkdocs-packages:
+        type: string
+        default: "mkdocs mkdocs-material"
+      pages-branch:
+        type: string
+        default: "gh-pages"
+      docs-subdir:
+        type: string
+        default: "docs"
+    secrets:
+      GITHUB_APP_ID:
+        required: true
+      GITHUB_APP_PRIVATE_KEY:
+        required: true
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ secrets.GITHUB_APP_ID }}
+          private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app.outputs.token }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install MkDocs and theme
+        run: |
+          pip install ${{ inputs.mkdocs-packages }}
+
+      - name: Build MkDocs site
+        run: |
+          mkdocs build
+
+      - name: Checkout pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.pages-branch }}
+          path: pages
+          token: ${{ steps.app.outputs.token }}
+
+      - name: Copy site into pages/docs
+        run: |
+          rm -rf "pages/${{ inputs.docs-subdir }}"
+          mkdir -p "pages/${{ inputs.docs-subdir }}"
+          cp -r site/* "pages/${{ inputs.docs-subdir }}/"
+
+      - name: Commit and push changes
+        run: |
+          cd pages
+          git config user.name "${{ steps.app.outputs.app-slug }}[bot]"
+          git config user.email "${{ steps.app.outputs.app-slug }}[bot]@users.noreply.github.com"
+
+          git add "${{ inputs.docs-subdir }}"
+          if git diff --cached --quiet; then
+            echo "No documentation changes to commit."
+            exit 0
+          fi
+
+          git commit -m "docs: update MkDocs site"
+          git push origin "${{ inputs.pages-branch }}"
