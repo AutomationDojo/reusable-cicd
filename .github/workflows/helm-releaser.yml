@@ -1,9 +1,36 @@
-name: Helm Chart Release
+name: Helm Releaser
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_call:
+    inputs:
+      charts_dir:
+        description: Directory containing Helm charts
+        required: false
+        type: string
+        default: charts
+
+      config:
+        description: chart-releaser config file
+        required: false
+        type: string
+
+      push_oci:
+        description: Push charts to GHCR OCI registry
+        required: false
+        type: boolean
+        default: false
+
+      cr_version:
+        description: chart-releaser version
+        required: false
+        type: string
+        default: v1.8.1
+
+    secrets:
+      DEVOPS_BUDDY_APP_ID:
+        required: true
+      DEVOPS_BUDDY_PRIVATE_KEY:
+        required: true
 
 permissions:
   contents: write
@@ -18,9 +45,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate GitHub App token
+        id: app
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
+          private-key: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
       - name: Setup Helm
@@ -28,24 +63,23 @@ jobs:
 
       - name: Install chart-releaser
         run: |
-          CR_VERSION="v1.8.1"
-          curl -sSL https://github.com/helm/chart-releaser/releases/download/${CR_VERSION}/chart-releaser_${CR_VERSION#v}_linux_amd64.tar.gz \
-            | tar -xz
+          version="${{ inputs.cr_version }}"
+          curl -sSL https://github.com/helm/chart-releaser/releases/download/${version}/chart-releaser_${version#v}_linux_amd64.tar.gz | tar -xz
           sudo mv cr /usr/local/bin/
 
       - name: Configure Git
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
+          git config user.name "${{ steps.app.outputs.app-slug }}[bot]"
+          git config user.email "${{ steps.app.outputs.app-slug }}[bot]@users.noreply.github.com"
 
-      - name: Ensure gh-pages exists
+      - name: Ensure gh-pages branch exists
         run: |
           if ! git ls-remote --exit-code origin gh-pages; then
             git checkout --orphan gh-pages
             git rm -rf .
             echo "# Helm Charts" > README.md
             git add README.md
-            git commit -m "init chart repo"
+            git commit -m "chore: initialize helm repo"
             git push origin gh-pages
             git checkout -
           fi
@@ -53,49 +87,67 @@ jobs:
       - name: Package charts
         run: |
           mkdir -p .cr-release-packages
-          cr package charts \
+
+          args=()
+          if [[ -n "${{ inputs.config }}" ]]; then
+            args+=(--config "${{ inputs.config }}")
+          fi
+
+          cr package "${{ inputs.charts_dir }}" \
+            --package-path .cr-release-packages \
+            "${args[@]}"
+
+      - name: Upload chart releases
+        run: |
+          OWNER=${GITHUB_REPOSITORY%/*}
+          REPO=${GITHUB_REPOSITORY#*/}
+
+          args=(
+            --owner "$OWNER"
+            --git-repo "$REPO"
             --package-path .cr-release-packages
+            --token "${{ steps.app.outputs.token }}"
+            --skip-existing
+          )
 
-      - name: Upload chart release
-        env:
-          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          if [[ -n "${{ inputs.config }}" ]]; then
+            args+=(--config "${{ inputs.config }}")
+          fi
+
+          cr upload "${args[@]}"
+
+      - name: Update Helm repository index
         run: |
           OWNER=${GITHUB_REPOSITORY%/*}
           REPO=${GITHUB_REPOSITORY#*/}
 
-          cr upload \
-            --owner "$OWNER" \
-            --git-repo "$REPO" \
-            --package-path .cr-release-packages \
-            --skip-existing \
-            --token "$CR_TOKEN"
+          args=(
+            --owner "$OWNER"
+            --git-repo "$REPO"
+            --package-path .cr-release-packages
+            --index-path index.yaml
+            --push
+            --token "${{ steps.app.outputs.token }}"
+          )
 
-      - name: Update Helm repo index
-        env:
-          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          OWNER=${GITHUB_REPOSITORY%/*}
-          REPO=${GITHUB_REPOSITORY#*/}
+          if [[ -n "${{ inputs.config }}" ]]; then
+            args+=(--config "${{ inputs.config }}")
+          fi
 
-          cr index \
-            --owner "$OWNER" \
-            --git-repo "$REPO" \
-            --package-path .cr-release-packages \
-            --index-path index.yaml \
-            --push \
-            --token "$CR_TOKEN"
+          cr index "${args[@]}"
 
       - name: Login to GHCR
-        if: success()
+        if: inputs.push_oci
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ steps.app.outputs.token }}
 
       - name: Push charts to OCI
-        if: success()
+        if: inputs.push_oci
         run: |
+          shopt -s nullglob
           for pkg in .cr-release-packages/*.tgz; do
             helm push "$pkg" oci://ghcr.io/${{ github.repository }}
           done
