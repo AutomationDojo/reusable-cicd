@@ -16,8 +16,8 @@ Reusable workflow that automates the release process for Go CLI applications. It
 
 | Name | Required | Description |
 |------|----------|-------------|
-| `DEVOPS_BUDDY_APP_ID` | Yes | GitHub App ID used to generate tokens for pushing tags and accessing the Homebrew tap repo |
-| `DEVOPS_BUDDY_PRIVATE_KEY` | Yes | GitHub App private key |
+| `GITHUB_APP_ID` | Yes | GitHub App ID used to generate tokens for pushing tags and accessing the Homebrew tap repo |
+| `GITHUB_APP_PRIVATE_KEY` | Yes | GitHub App private key |
 
 ## Caller Permissions
 
@@ -58,8 +58,8 @@ jobs:
   release:
     uses: user-cube/reusable-cicd/.github/workflows/golang-cli-apps_release.yml@main
     secrets:
-      DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-      DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+      GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
     with:
       homebrew-tap-repo: "homebrew-tap"
       go-version-file: go.mod

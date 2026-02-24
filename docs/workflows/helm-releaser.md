@@ -10,7 +10,7 @@ You’re not “hosting a site” — you’re exposing your **Helm repo index**
 
 - A branch named `gh-pages` in your repository (the action will create it on first run if it has push access).
 - **Settings → Pages**: set **Source** to the `gh-pages` branch so the chart index is served.
-- Repository secrets: `DEVOPS_BUDDY_APP_ID` and `DEVOPS_BUDDY_PRIVATE_KEY` (GitHub App that can push to the repo and create releases).
+- Repository secrets: `GITHUB_APP_ID` and `GITHUB_APP_PRIVATE_KEY` (GitHub App that can push to the repo and create releases).
 
 ## Usage
 
@@ -41,8 +41,8 @@ jobs:
       # config: ".github/cr.yaml"   # optional
       # push_oci: true              # optional: also push to ghcr.io
     secrets:
-      DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-      DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+      GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 ```
 
 ## Inputs
@@ -81,14 +81,14 @@ Then pass it in the workflow: `config: ".github/cr.yaml"`.
 
 | Secret | Description | Required |
 | :--- | :--- | :--- |
-| `DEVOPS_BUDDY_APP_ID` | GitHub App ID (same as other reusable workflows that push). | Yes |
-| `DEVOPS_BUDDY_PRIVATE_KEY` | GitHub App private key (same as other reusable workflows that push). | Yes |
+| `GITHUB_APP_ID` | GitHub App ID (same as other reusable workflows that push). | Yes |
+| `GITHUB_APP_PRIVATE_KEY` | GitHub App private key (same as other reusable workflows that push). | Yes |
 
 ## Authentication (CR_TOKEN)
 
 The [chart-releaser-action](https://github.com/helm/chart-releaser-action) expects a GitHub token in the **CR_TOKEN** environment variable. It uses that token to create GitHub releases, attach chart artifacts, and push the `index.yaml` to the `gh-pages` branch.
 
-**You do not need to provide CR_TOKEN.** This reusable workflow creates a token from the GitHub App (using `DEVOPS_BUDDY_APP_ID` and `DEVOPS_BUDDY_PRIVATE_KEY`) and passes it to the action as `CR_TOKEN` internally. You only need to configure the two app secrets in your repository (or org).
+**You do not need to provide CR_TOKEN.** This reusable workflow creates a token from the GitHub App (using `GITHUB_APP_ID` and `GITHUB_APP_PRIVATE_KEY`) and passes it to the action as `CR_TOKEN` internally. You only need to configure the two app secrets in your repository (or org).
 
 ## Concurrency
 

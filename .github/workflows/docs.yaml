@@ -19,8 +19,8 @@ jobs:
   release:
     uses: user-cube/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
     secrets:
-      DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-      DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+      GITHUB_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
 
   docs:
     needs: release

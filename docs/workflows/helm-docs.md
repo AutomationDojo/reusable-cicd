@@ -18,8 +18,8 @@ You must pass the GitHub App secrets (same as Helm Releaser and other workflows 
 
 | Secret | Description | Required |
 | :--- | :--- | :--- |
-| `DEVOPS_BUDDY_APP_ID` | GitHub App ID. | Yes |
-| `DEVOPS_BUDDY_PRIVATE_KEY` | GitHub App private key. | Yes |
+| `GITHUB_APP_ID` | GitHub App ID. | Yes |
+| `GITHUB_APP_PRIVATE_KEY` | GitHub App private key. | Yes |
 
 The workflow uses the app token for checkout and push so commits are attributed to the app bot.
 
@@ -54,8 +54,8 @@ jobs:
   helm-docs:
     uses: user-cube/reusable-cicd/.github/workflows/helm-docs.yml@main
     secrets:
-      DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-      DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+      GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 ```
 
 ### Check-only (no push)
@@ -86,8 +86,8 @@ jobs:
       output_file: "README.md"
       git_commit_message: "docs: sync helm-docs"
     secrets:
-      DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-      DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+      GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 ```
 
 ## How it works

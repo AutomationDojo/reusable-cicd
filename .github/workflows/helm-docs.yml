@@ -1,6 +1,6 @@
 # Reusable workflow for generating Helm chart docs (helm-docs).
 # The caller must set `permissions: contents: write, pull-requests: write` if using git_push.
-# When using git_push, pass DEVOPS_BUDDY_APP_ID and DEVOPS_BUDDY_PRIVATE_KEY.
+# When using git_push, pass GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY.
 name: Helm Docs
 
 on:
@@ -32,10 +32,10 @@ on:
         type: string
         default: 'docs: update helm-docs'
     secrets:
-      DEVOPS_BUDDY_APP_ID:
+      GITHUB_APP_ID:
         description: "GitHub App ID (required when git_push is true)"
         required: true
-      DEVOPS_BUDDY_PRIVATE_KEY:
+      GITHUB_APP_PRIVATE_KEY:
         description: "GitHub App private key (required when git_push is true)"
         required: true
 
@@ -51,8 +51,8 @@ jobs:
         id: app
         if: inputs.git_push
         with:
-          app-id: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-          private-key: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+          app-id: ${{ secrets.GITHUB_APP_ID }}
+          private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 
       - name: Setup Git (bot da App)
         if: inputs.git_push

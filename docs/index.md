@@ -13,3 +13,23 @@ A collection of reusable GitHub Actions workflows and composite actions for comm
 - [Helm Lint](workflows/helm-lint.md) — Lint Helm charts with chart-testing (`ct lint`) on pull requests.
 - [Helm Docs](workflows/helm-docs.md) — Generate chart documentation with helm-docs and optionally commit back to the PR.
 - [Helm Releaser](workflows/helm-releaser.md) — Automate packaging and publishing of Helm charts to GitHub Pages.
+
+## GitHub App requirements
+
+Most workflows that push commits, tags, or releases use a GitHub App token instead of the default `GITHUB_TOKEN`. They expect two secrets to be configured at the repository or organization level:
+
+- `GITHUB_APP_ID`
+- `GITHUB_APP_PRIVATE_KEY`
+
+### How to create a GitHub App for these workflows
+
+1. In GitHub, go to **Settings → Developer settings → GitHub Apps → New GitHub App**.
+2. Choose a name and, under **Repository permissions**, grant at least:
+   - **Contents**: Read and write
+   - **Pull requests**: Read and write (for workflows that update PRs)
+   - **Issues**: Read and write (if you want releases or automation to touch issues)
+3. Set **Where can this GitHub App be installed?** to your user or organization, then create the app.
+4. On the app page:
+   - Copy the **App ID** and store it as the `GITHUB_APP_ID` secret.
+   - Generate a **private key** and store its PEM contents as the `GITHUB_APP_PRIVATE_KEY` secret.
+5. Install the app on the repositories that will call these reusable workflows (from the **Install App** section of the GitHub App settings).

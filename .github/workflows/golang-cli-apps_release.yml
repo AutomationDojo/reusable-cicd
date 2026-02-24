@@ -26,10 +26,10 @@ on:
         type: string
         default: "go.sum"
     secrets:
-      DEVOPS_BUDDY_APP_ID:
+      GITHUB_APP_ID:
         description: "GitHub App ID"
         required: true
-      DEVOPS_BUDDY_PRIVATE_KEY:
+      GITHUB_APP_PRIVATE_KEY:
         description: "GitHub App private key"
         required: true
 
@@ -43,8 +43,8 @@ jobs:
       - uses: actions/create-github-app-token@v2
         id: app
         with:
-          app-id: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-          private-key: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+          app-id: ${{ secrets.GITHUB_APP_ID }}
+          private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 
       - name: Setup Git (bot da App)
         run: |
@@ -77,8 +77,8 @@ jobs:
       - uses: actions/create-github-app-token@v2
         id: app
         with:
-          app-id: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-          private-key: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+          app-id: ${{ secrets.GITHUB_APP_ID }}
+          private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
           repositories: ${{ inputs.homebrew-tap-repo }}
 
       - uses: actions/checkout@v6

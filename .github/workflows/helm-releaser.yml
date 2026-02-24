@@ -27,9 +27,9 @@ on:
         default: v1.8.1
 
     secrets:
-      DEVOPS_BUDDY_APP_ID:
+      GITHUB_APP_ID:
         required: true
-      DEVOPS_BUDDY_PRIVATE_KEY:
+      GITHUB_APP_PRIVATE_KEY:
         required: true
 
 permissions:
@@ -45,8 +45,8 @@ jobs:
         id: app
         uses: actions/create-github-app-token@v2
         with:
-          app-id: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-          private-key: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+          app-id: ${{ secrets.GITHUB_APP_ID }}
+          private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 
       - name: Checkout
         uses: actions/checkout@v4

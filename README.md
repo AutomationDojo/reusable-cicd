@@ -14,6 +14,13 @@ A collection of reusable GitHub Actions workflows for common CI/CD tasks. Call t
 | [Simple Semantic Release](https://reusable-cicd.ruicoelho.dev/workflows/semantic-release-simple/) | Automate versioning and changelog generation with semantic-release |
 | [Terraform Docs](https://reusable-cicd.ruicoelho.dev/workflows/terraform-docs/) | Generate terraform-docs for changed modules and commit to PR |
 
+Most workflows that push tags, commits, or releases use a GitHub App for authentication. They expect the following repository or organization secrets:
+
+- `GITHUB_APP_ID`
+- `GITHUB_APP_PRIVATE_KEY`
+
+See the docs site for details on how to set these up.
+
 ## Quick Start
 
 ```yaml

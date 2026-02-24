@@ -15,8 +15,8 @@ By default it includes the `@semantic-release/changelog` and `@semantic-release/
 
 | Name | Required | Description |
 |------|----------|-------------|
-| `DEVOPS_BUDDY_APP_ID` | Yes | GitHub App ID used to generate tokens for pushing tags and commits |
-| `DEVOPS_BUDDY_PRIVATE_KEY` | Yes | GitHub App private key |
+| `GITHUB_APP_ID` | Yes | GitHub App ID used to generate tokens for pushing tags and commits |
+| `GITHUB_APP_PRIVATE_KEY` | Yes | GitHub App private key |
 
 ## Caller Permissions
 
@@ -57,8 +57,8 @@ jobs:
   release:
     uses: user-cube/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
     secrets:
-      DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-      DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+      GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 ```
 
 ### With custom plugins
@@ -77,8 +77,8 @@ jobs:
   release:
     uses: user-cube/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
     secrets:
-      DEVOPS_BUDDY_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-      DEVOPS_BUDDY_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+      GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
     with:
       extra-plugins: |
         @semantic-release/changelog
