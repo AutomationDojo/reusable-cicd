@@ -1,4 +1,4 @@
-# Reusable workflow for releasing Helm charts.
+# Reusable workflow for releasing Helm charts using the cr CLI directly.
 # The caller must set `permissions: contents: write`; add `packages: write` if using push_oci.
 name: Reusable Helm Releaser
 
@@ -20,6 +20,11 @@ on:
         required: false
         type: boolean
         default: false
+      cr_version:
+        description: 'chart-releaser CLI version'
+        required: false
+        type: string
+        default: 'v1.8.1'
     secrets:
       DEVOPS_BUDDY_APP_ID:
         description: "GitHub App ID"
@@ -52,21 +57,50 @@ jobs:
           token: ${{ steps.app.outputs.token }}
           persist-credentials: false
 
-      - name: Fetch current Chart Index
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Install chart-releaser
+        run: |
+          version="${{ inputs.cr_version }}"
+          archive="chart-releaser_${version#v}_linux_amd64.tar.gz"
+          curl -sSLo "$archive" "https://github.com/helm/chart-releaser/releases/download/${version}/${archive}"
+          tar -xzf "$archive" cr
+          install -m 755 cr /usr/local/bin/cr
+          rm -f "$archive"
+
+      - name: Fetch current chart index
         run: |
           git fetch origin gh-pages 2>/dev/null && git checkout origin/gh-pages -- index.yaml 2>/dev/null || true
         continue-on-error: true
 
-      - name: Install Helm
-        uses: azure/setup-helm@v4
+      - name: Package chart
+        run: |
+          args=()
+          if [[ -n "${{ inputs.config }}" ]]; then
+            args+=(--config "${{ inputs.config }}")
+          fi
+          mkdir -p .cr-release-packages
+          cr package "${{ inputs.charts_dir }}" "${args[@]}" --package-path .cr-release-packages
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.7.0
-        with:
-          charts_dir: ${{ inputs.charts_dir }}
-          config: ${{ inputs.config }}
-        env:
-          CR_TOKEN: ${{ steps.app.outputs.token }}
+      - name: Upload chart release
+        run: |
+          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
+          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
+          cr upload --owner "$owner" --repo "$repo" \
+            --token "${{ steps.app.outputs.token }}" \
+            --package-path .cr-release-packages \
+            --skip-existing
+
+      - name: Update chart index
+        run: |
+          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
+          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
+          cr index --owner "$owner" --repo "$repo" \
+            --token "${{ steps.app.outputs.token }}" \
+            --package-path .cr-release-packages \
+            --index-path index.yaml \
+            --push
 
       - name: Login to GHCR
         if: inputs.push_oci
