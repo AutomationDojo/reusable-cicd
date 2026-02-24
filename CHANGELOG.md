@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/user-cube/reusable-cicd/compare/v1.7.0...v1.7.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* update missing docs ([1c87ec9](https://github.com/user-cube/reusable-cicd/commit/1c87ec9bc2e1bd054a5031b0ff343e38818cc540))
+
 # [1.7.0](https://github.com/user-cube/reusable-cicd/compare/v1.6.0...v1.7.0) (2026-02-24)
 
 
