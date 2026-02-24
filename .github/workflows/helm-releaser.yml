@@ -77,23 +77,31 @@ jobs:
 
       - name: Package chart
         run: |
-          args=()
-          if [[ -n "${{ inputs.config }}" ]]; then
-            args+=(--config "${{ inputs.config }}")
-          fi
-          mkdir -p .cr-release-packages
-          cr package "${{ inputs.charts_dir }}" "${args[@]}" --package-path .cr-release-packages
+          cr package charts/bitwarden-password-manager-eso \
+            --package-path .cr-release-packages
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.7.0
-        with:
-          charts_dir: charts
-          config: .github/configs/cr.yaml
-          skip_existing: true
-          mark_as_latest: true
-        env:
-          CR_TOKEN: ${{ steps.app.outputs.token }}
+      - name: Upload chart release
+        run: |
+          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
+          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
+          cr upload \
+            --owner "$owner" \
+            --git-repo "$repo" \
+            --token "${{ steps.app.outputs.token }}" \
+            --package-path .cr-release-packages \
+            --skip-existing
 
+      - name: Update chart index
+        run: |
+          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
+          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
+          cr index \
+            --owner "$owner" \
+            --git-repo "$repo" \
+            --token "${{ steps.app.outputs.token }}" \
+            --package-path .cr-release-packages \
+            --index-path index.yaml \
+            --push
       - name: Login to GHCR
         if: inputs.push_oci
         uses: docker/login-action@v3
