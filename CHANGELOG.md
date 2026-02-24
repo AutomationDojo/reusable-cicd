@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/user-cube/reusable-cicd/compare/v1.4.0...v1.5.0) (2026-02-24)
+
+
+### Features
+
+* helm lint; helm docs; helm releaser ([929f872](https://github.com/user-cube/reusable-cicd/commit/929f872939eab8b683449a9df1dce7f0804cef5f))
+
 # [1.4.0](https://github.com/user-cube/reusable-cicd/compare/v1.3.2...v1.4.0) (2026-02-24)
 
 
