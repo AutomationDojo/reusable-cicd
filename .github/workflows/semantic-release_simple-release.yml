@@ -15,6 +15,10 @@ on:
         default: |
           @semantic-release/changelog
           @semantic-release/git
+      pre-install:
+        description: "Shell script to run before semantic-release (e.g. to install extra tools)"
+        type: string
+        default: ""
     outputs:
       new-release:
         description: "Whether a new release was published"
@@ -56,6 +60,10 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
+
+      - name: Pre-install tools
+        if: inputs.pre-install != ''
+        run: ${{ inputs.pre-install }}
 
       - id: semantic
         uses: cycjimmy/semantic-release-action@v4
