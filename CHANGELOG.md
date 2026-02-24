@@ -1,3 +1,11 @@
+## [1.5.8](https://github.com/user-cube/reusable-cicd/compare/v1.5.7...v1.5.8) (2026-02-24)
+
+
+### Bug Fixes
+
+* update cr ([6ebb9cf](https://github.com/user-cube/reusable-cicd/commit/6ebb9cf67cbc2d7ce7d154661e21de2375b3b2c1))
+* update cr ([78d9cec](https://github.com/user-cube/reusable-cicd/commit/78d9cec4da5af16031ebbc7ef9a37506a1606f3b))
+
 ## [1.5.7](https://github.com/user-cube/reusable-cicd/compare/v1.5.6...v1.5.7) (2026-02-24)
 
 
