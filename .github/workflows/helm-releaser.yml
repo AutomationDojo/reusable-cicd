@@ -87,9 +87,10 @@ jobs:
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:
-          charts_dir: ${{ inputs.charts_dir }}
-          config: ${{ inputs.config }}
+          charts_dir: charts
+          config: .github/configs/cr.yaml
           skip_existing: true
+          mark_as_latest: true
         env:
           CR_TOKEN: ${{ steps.app.outputs.token }}
 
