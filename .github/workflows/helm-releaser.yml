@@ -55,6 +55,10 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ steps.app.outputs.token }}
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Pull latest changes
+        run: git pull origin ${{ github.event.repository.default_branch }}
 
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -89,13 +93,25 @@ jobs:
             args+=(--config "${{ inputs.config }}")
           fi
           mkdir -p .cr-release-packages
-          cr package "${{ inputs.charts_dir }}" "${args[@]}" --package-path .cr-release-packages
+          for chart in "${{ inputs.charts_dir }}"/*/; do
+            if [[ -f "${chart}Chart.yaml" ]]; then
+              echo "Packaging chart: ${chart}"
+              cr package "${chart}" "${args[@]}" --package-path .cr-release-packages
+            fi
+          done
 
       - name: Upload chart release
         run: |
           owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
           repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
-          args=(--owner "$owner" --git-repo "$repo" --token "${{ steps.app.outputs.token }}" --package-path .cr-release-packages --skip-existing)
+          args=(
+            --owner "$owner"
+            --git-repo "$repo"
+            --token "${{ steps.app.outputs.token }}"
+            --package-path .cr-release-packages
+            --skip-existing
+            --commit "${{ github.sha }}"
+          )
           if [[ -n "${{ inputs.config }}" ]]; then
             args+=(--config "${{ inputs.config }}")
           fi
@@ -106,7 +122,14 @@ jobs:
           git fetch origin gh-pages
           owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
           repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
-          args=(--owner "$owner" --git-repo "$repo" --token "${{ steps.app.outputs.token }}" --package-path .cr-release-packages --index-path index.yaml --push)
+          args=(
+            --owner "$owner"
+            --git-repo "$repo"
+            --token "${{ steps.app.outputs.token }}"
+            --package-path .cr-release-packages
+            --index-path index.yaml
+            --push
+          )
           if [[ -n "${{ inputs.config }}" ]]; then
             args+=(--config "${{ inputs.config }}")
           fi
