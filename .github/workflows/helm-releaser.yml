@@ -46,16 +46,15 @@ jobs:
           app-id: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
           private-key: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
 
-      - name: Setup Git (bot da App)
+      - name: Setup Git
         run: |
           git config --global user.name "${{ steps.app.outputs.app-slug }}[bot]"
           git config --global user.email "${{ steps.app.outputs.app-slug }}[bot]@users.noreply.github.com"
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ steps.app.outputs.token }}
-          persist-credentials: false
 
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -70,18 +69,48 @@ jobs:
           install -m 755 "${tmp}/cr" /usr/local/bin/cr
           rm -rf "$tmp"
 
-      - name: Fetch current chart index
+      - name: Create gh-pages branch if missing
         run: |
-          git fetch origin gh-pages 2>/dev/null && git checkout origin/gh-pages -- index.yaml 2>/dev/null || true
-        continue-on-error: true
+          if ! git ls-remote --exit-code origin gh-pages; then
+            git checkout --orphan gh-pages
+            git rm -rf .
+            echo "# Helm Charts" > README.md
+            git add README.md
+            git commit -m "chore: initialize gh-pages"
+            git push origin gh-pages
+            git checkout -
+          fi
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.7.0
-        with:
-          charts_dir: charts
-          skip_existing: true
-        env:
-          CR_TOKEN: ${{ steps.app.outputs.token }}
+      - name: Package chart
+        run: |
+          args=()
+          if [[ -n "${{ inputs.config }}" ]]; then
+            args+=(--config "${{ inputs.config }}")
+          fi
+          mkdir -p .cr-release-packages
+          cr package "${{ inputs.charts_dir }}" "${args[@]}" --package-path .cr-release-packages
+
+      - name: Upload chart release
+        run: |
+          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
+          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
+          args=(--owner "$owner" --git-repo "$repo" --token "${{ steps.app.outputs.token }}" --package-path .cr-release-packages --skip-existing)
+          if [[ -n "${{ inputs.config }}" ]]; then
+            args+=(--config "${{ inputs.config }}")
+          fi
+          cr upload "${args[@]}"
+
+      - name: Update chart index
+        run: |
+          git fetch origin gh-pages
+          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
+          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
+          args=(--owner "$owner" --git-repo "$repo" --token "${{ steps.app.outputs.token }}" --package-path .cr-release-packages --index-path index.yaml --push)
+          if [[ -n "${{ inputs.config }}" ]]; then
+            args+=(--config "${{ inputs.config }}")
+          fi
+          cr index "${args[@]}"
+
       - name: Login to GHCR
         if: inputs.push_oci
         uses: docker/login-action@v3
