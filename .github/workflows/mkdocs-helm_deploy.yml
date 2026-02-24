@@ -33,7 +33,7 @@ jobs:
           private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ steps.app.outputs.token }}
@@ -52,7 +52,7 @@ jobs:
           mkdocs build
 
       - name: Checkout pages branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.pages-branch }}
           path: pages
