@@ -66,7 +66,7 @@ async function main() {
 version: 0.1.0
 name: ${chartName}
 displayName: ${chartName}
-description: Helm chart for ${chartName}.
+description: ${chartDescription}
 keywords: []
 home: https://github.com/${githubOwner}/${chartName}
 sources:
