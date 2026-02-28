@@ -71,13 +71,14 @@ jobs:
       - name: Ensure gh-pages branch exists
         run: |
           if ! git ls-remote --exit-code origin gh-pages; then
+            BRANCH=$(git branch --show-current)
             git checkout --orphan gh-pages
             git rm -rf .
             echo "# Helm Charts" > README.md
             git add README.md
             git commit -m "chore: initialize helm repo"
             git push origin gh-pages
-            git checkout -
+            git checkout "$BRANCH"
           fi
 
       - name: Package charts
