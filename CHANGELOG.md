@@ -3,6 +3,19 @@
 
 ### Bug Fixes
 
+* transfer repo ([eb04d67](https://github.com/AutomationDojo/reusable-cicd/commit/eb04d6730f9dd4bd64a70f63105988301a137cde))
+* transfer repo ([4b77c8d](https://github.com/AutomationDojo/reusable-cicd/commit/4b77c8d374014fac60e170446c49331b34a1ff6c))
+
+
+### Features
+
+* add pre-test, test-cmd and build-cmd inputs to build-and-test-pr workflow ([cb8ed0e](https://github.com/AutomationDojo/reusable-cicd/commit/cb8ed0eed081e667af75aaceea2b28a8d1c02a46))
+
+# [1.9.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.8.4...v1.9.0) (2026-02-28)
+
+
+### Bug Fixes
+
 * transfer repo ([4b77c8d](https://github.com/AutomationDojo/reusable-cicd/commit/4b77c8d374014fac60e170446c49331b34a1ff6c))
 
 
