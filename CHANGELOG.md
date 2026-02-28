@@ -1,3 +1,10 @@
+## [1.8.3](https://github.com/user-cube/reusable-cicd/compare/v1.8.2...v1.8.3) (2026-02-28)
+
+
+### Bug Fixes
+
+* add ref ([46f5b8d](https://github.com/user-cube/reusable-cicd/commit/46f5b8d0fd6f514b2eee7adc97b5cc156538d4ff))
+
 ## [1.8.2](https://github.com/user-cube/reusable-cicd/compare/v1.8.1...v1.8.2) (2026-02-28)
 
 
