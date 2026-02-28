@@ -26,6 +26,7 @@ A collection of reusable GitHub Actions workflows for common CI/CD tasks. Call t
 | [Helm Releaser](https://reusable-cicd.automationdojo.org/workflows/helm-releaser/) | Package and publish Helm charts to GitHub Pages (and optionally GHCR OCI) |
 | [MkDocs Deploy](https://reusable-cicd.automationdojo.org/workflows/mkdocs-deploy/) | Build and deploy MkDocs sites to GitHub Pages |
 | [MkDocs + Helm Pages](https://reusable-cicd.automationdojo.org/workflows/mkdoc-helm_deploy/) | Build MkDocs and publish into an existing Helm Pages branch |
+| [Node Build and Test](https://reusable-cicd.automationdojo.org/workflows/node-build-and-test/) | Lint, type check, and build Node.js projects on PRs |
 | [Simple Semantic Release](https://reusable-cicd.automationdojo.org/workflows/semantic-release-simple/) | Automate versioning and changelog generation with semantic-release |
 | [Terraform Docs](https://reusable-cicd.automationdojo.org/workflows/terraform-docs/) | Generate terraform-docs for changed modules and commit to PR |
 
