@@ -31238,7 +31238,6 @@ async function main() {
     "README.md",
     ".releaserc.yaml",
     ".github/configs/cr.yaml",
-    ".github/workflows/release.yml",
     "mkdocs.yml",
     "docs/index.md",
     "docs/usage.md",
