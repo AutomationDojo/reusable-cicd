@@ -1,0 +1,86 @@
+# Reusable workflow: CI gate (build + lint) then Simple Semantic Release.
+# The caller must set `permissions: contents: write` (and optionally `issues: write`, `pull-requests: write`).
+# Requires GitHub App secrets for the release step.
+name: Node Release
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: "Node.js version for CI and release"
+        type: string
+        default: "22"
+      cache:
+        description: "Package manager for dependency cache (npm, yarn, or pnpm)"
+        type: string
+        default: "npm"
+      build-cmd:
+        description: "Command to run build (CI gate)"
+        type: string
+        default: "npm run build"
+      lint-cmd:
+        description: "Command to run lint (CI gate)"
+        type: string
+        default: "npm run lint"
+      extra-plugins:
+        description: "Newline-separated extra semantic-release plugins (passed to Simple Semantic Release)"
+        type: string
+        default: |
+          @semantic-release/changelog
+          @semantic-release/git
+      pre-install:
+        description: "Shell script to run before semantic-release in the release job. Default runs npm ci."
+        type: string
+        default: "npm ci"
+    outputs:
+      new-release:
+        description: "Whether a new release was published"
+        value: ${{ jobs.release.outputs.new-release }}
+      version:
+        description: "The new release version"
+        value: ${{ jobs.release.outputs.version }}
+    secrets:
+      GITHUB_APP_ID:
+        description: "GitHub App ID (for release step)"
+        required: true
+      GITHUB_APP_PRIVATE_KEY:
+        description: "GitHub App private key (for release step)"
+        required: true
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.cache }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: ${{ inputs.build-cmd }}
+
+      - name: Lint
+        run: ${{ inputs.lint-cmd }}
+
+  release:
+    name: Release
+    needs: ci
+    uses: AutomationDojo/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
+    with:
+      node-version: ${{ inputs.node-version }}
+      pre-install: ${{ inputs.pre-install }}
+      extra-plugins: ${{ inputs.extra-plugins }}
+    secrets:
+      GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}

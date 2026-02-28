@@ -30,6 +30,8 @@ nav:
       - Golang CLI Release: workflows/golang-cli-release.md
       - MkDocs Deploy: workflows/mkdocs-deploy.md
       - MkDocs + Helm Pages: workflows/mkdoc-helm_deploy.md
+      - Node Build and Test: workflows/node-build-and-test.md
+      - Node Release: workflows/node-release.md
       - Simple Semantic Release: workflows/semantic-release-simple.md
       - Terraform Docs: workflows/terraform-docs.md
       - Helm Lint: workflows/helm-lint.md
