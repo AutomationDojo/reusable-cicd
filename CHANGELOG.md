@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/user-cube/reusable-cicd/compare/v1.8.0...v1.8.1) (2026-02-28)
+
+
+### Bug Fixes
+
+* use arm and amd runners ([d055d79](https://github.com/user-cube/reusable-cicd/commit/d055d795928ed39188256f4885aba89d138c2f19))
+
 # [1.8.0](https://github.com/user-cube/reusable-cicd/compare/v1.7.1...v1.8.0) (2026-02-28)
 
 
