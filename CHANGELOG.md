@@ -1,3 +1,10 @@
+## [1.11.6](https://github.com/AutomationDojo/reusable-cicd/compare/v1.11.5...v1.11.6) (2026-02-28)
+
+
+### Bug Fixes
+
+* add pat to action ([#23](https://github.com/AutomationDojo/reusable-cicd/issues/23)) ([dfe25ac](https://github.com/AutomationDojo/reusable-cicd/commit/dfe25ac8f215873bf4932b07a4ecf320341e8aa0))
+
 ## [1.11.5](https://github.com/AutomationDojo/reusable-cicd/compare/v1.11.4...v1.11.5) (2026-02-28)
 
 
