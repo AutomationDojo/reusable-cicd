@@ -26,6 +26,11 @@ on:
         type: string
         default: v1.8.1
 
+      ref:
+        description: Git ref to checkout (e.g. refs/tags/v1.0.0). If set, chart is packaged from this ref so Chart.yaml version matches the release.
+        required: false
+        type: string
+
     secrets:
       GITHUB_APP_ID:
         required: true
@@ -51,6 +56,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.ref || github.ref }}
           token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
