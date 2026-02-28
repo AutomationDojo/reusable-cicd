@@ -13,5 +13,8 @@
   },
   "devDependencies": {
     "@vercel/ncc": "^0.38.3"
+  },
+  "overrides": {
+    "undici": "^6.23.0"
   }
 }
