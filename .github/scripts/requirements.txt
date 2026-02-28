@@ -1,0 +1,2 @@
+# For update-artifacthub-changes.py (used in semantic-release prepare step)
+PyYAML>=6.0

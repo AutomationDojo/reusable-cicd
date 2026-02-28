@@ -19,6 +19,14 @@ on:
         description: "Shell script to run before semantic-release (e.g. to install extra tools)"
         type: string
         default: ""
+      chart-path:
+        description: "Path to Helm chart dir (e.g. charts/bootchain-operator). When set, copies shared Helm/Artifact Hub scripts into .github/scripts and installs their deps."
+        type: string
+        default: ""
+      scripts-repo:
+        description: "Repo containing shared scripts (used when chart-path is set)"
+        type: string
+        default: "user-cube/reusable-cicd"
     outputs:
       new-release:
         description: "Whether a new release was published"
@@ -56,6 +64,18 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ steps.app.outputs.token }}
+
+      - name: Copy shared Helm/Artifact Hub scripts
+        if: inputs.chart-path != ''
+        run: |
+          mkdir -p .github/scripts
+          git clone --depth 1 "https://x-access-token:${{ steps.app.outputs.token }}@github.com/${{ inputs.scripts-repo }}.git" .reusable-scripts
+          cp .reusable-scripts/.github/scripts/*.py .reusable-scripts/.github/scripts/requirements.txt .github/scripts/
+          rm -rf .reusable-scripts
+
+      - name: Install Python deps for Helm/Artifact Hub scripts
+        if: inputs.chart-path != ''
+        run: pip install -r .github/scripts/requirements.txt
 
       - uses: actions/setup-node@v6
         with:
