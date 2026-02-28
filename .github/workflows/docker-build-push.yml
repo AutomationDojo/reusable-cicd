@@ -14,6 +14,10 @@ on:
         description: "Docker build context path"
         type: string
         default: "."
+      dockerfile:
+        description: "Path to the Dockerfile (relative to context)"
+        type: string
+        default: "Dockerfile"
       platforms:
         description: "Comma-separated list of platforms to build"
         type: string
@@ -65,6 +69,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ inputs.context }}
+          file: ${{ inputs.context }}/${{ inputs.dockerfile }}
           platforms: ${{ matrix.platform }}
           push: ${{ inputs.push }}
           tags: |
