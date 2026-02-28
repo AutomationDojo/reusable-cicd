@@ -1,6 +1,6 @@
 site_name: Reusable CI/CD
-site_url: https://reusable-cicd.ruicoelho.dev
-repo_url: https://github.com/ruicoelho/reusable-cicd
+site_url: https://reusable-cicd.automationdojo.org
+repo_url: https://github.com/AutomationDojo/reusable-cicd
 
 theme:
   name: material
