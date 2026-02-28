@@ -17,6 +17,7 @@ Typically used after a release workflow (e.g. [Simple Semantic Release](semantic
 |------|------|---------|-------------|
 | `version` | `string` | — | **Required.** Release version without the `v` prefix; used for the image tag and for checking out `v<version>`. |
 | `context` | `string` | `"."` | Docker build context path. |
+| `dockerfile` | `string` | `Dockerfile` | Path to the Dockerfile relative to the context (e.g. `Dockerfile`, `Dockerfile.prod`, `docker/Dockerfile`). |
 | `platforms` | `string` | `linux/amd64,linux/arm64` | Comma-separated list of platforms to build. |
 | `push` | `boolean` | `true` | Whether to push the image to GHCR. |
 
@@ -68,7 +69,7 @@ jobs:
       packages: write
 ```
 
-With custom context and platforms:
+With custom context, Dockerfile, and platforms:
 
 ```yaml
   docker:
@@ -76,7 +77,22 @@ With custom context and platforms:
     with:
       version: ${{ needs.release.outputs.version }}
       context: ./app
+      dockerfile: Dockerfile.prod
       platforms: linux/amd64,linux/arm64,linux/arm/v7
+    permissions:
+      contents: read
+      packages: write
+```
+
+When the Dockerfile lives in a subdirectory of the context, pass the path relative to the context:
+
+```yaml
+  docker:
+    uses: AutomationDojo/reusable-cicd/.github/workflows/docker-build-push.yml@main
+    with:
+      version: ${{ needs.release.outputs.version }}
+      context: .
+      dockerfile: docker/Dockerfile
     permissions:
       contents: read
       packages: write
