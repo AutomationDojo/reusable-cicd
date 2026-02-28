@@ -1,3 +1,10 @@
+## [1.11.2](https://github.com/AutomationDojo/reusable-cicd/compare/v1.11.1...v1.11.2) (2026-02-28)
+
+
+### Bug Fixes
+
+* fix helm init ([#19](https://github.com/AutomationDojo/reusable-cicd/issues/19)) ([1ce5cfb](https://github.com/AutomationDojo/reusable-cicd/commit/1ce5cfbd1e4acdbd17df91369a9efcfb800ceb88))
+
 ## [1.11.1](https://github.com/AutomationDojo/reusable-cicd/compare/v1.11.0...v1.11.1) (2026-02-28)
 
 
