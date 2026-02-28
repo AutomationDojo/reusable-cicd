@@ -1,4 +1,4 @@
-# Reusable workflow for building and testing Go CLI apps on PRs.
+# Reusable workflow for building and testing Go projects on PRs.
 # The caller must set `permissions: contents: read, pull-requests: read`.
 name: Build and Test on PR
 
@@ -17,6 +17,18 @@ on:
         description: "golangci-lint version to use"
         type: string
         default: "latest"
+      pre-test:
+        description: "Shell script to run before tests (e.g. to install envtest binaries or other test dependencies)"
+        type: string
+        default: ""
+      test-cmd:
+        description: "Command to run tests. Defaults to 'go test -v ./...'"
+        type: string
+        default: "go test -v ./..."
+      build-cmd:
+        description: "Command to build the project. Defaults to 'go build -v'"
+        type: string
+        default: "go build -v"
 
 jobs:
   build:
@@ -33,8 +45,12 @@ jobs:
           go-version-file: ${{ inputs.go-version-file }}
           cache-dependency-path: ${{ inputs.go-sum-file }}
 
+      - name: Pre-test setup
+        if: inputs.pre-test != ''
+        run: ${{ inputs.pre-test }}
+
       - name: Run tests
-        run: go test -v ./...
+        run: ${{ inputs.test-cmd }}
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
@@ -42,4 +58,4 @@ jobs:
           version: ${{ inputs.golangci-lint-version }}
 
       - name: Build
-        run: go build -v
+        run: ${{ inputs.build-cmd }}
