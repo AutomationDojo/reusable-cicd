@@ -1,3 +1,10 @@
+## [1.11.5](https://github.com/AutomationDojo/reusable-cicd/compare/v1.11.4...v1.11.5) (2026-02-28)
+
+
+### Bug Fixes
+
+* allow sufix on generated image ([#22](https://github.com/AutomationDojo/reusable-cicd/issues/22)) ([ef77ab1](https://github.com/AutomationDojo/reusable-cicd/commit/ef77ab11370c4a3826fda007cb8cb8b7ca79f365))
+
 ## [1.11.4](https://github.com/AutomationDojo/reusable-cicd/compare/v1.11.3...v1.11.4) (2026-02-28)
 
 
