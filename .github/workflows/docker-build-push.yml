@@ -30,6 +30,10 @@ on:
         description: "Whether to push the image to the registry"
         type: boolean
         default: true
+    secrets:
+      GHCR_TOKEN:
+        description: "Optional token for GHCR login (e.g. PAT with SSO). When not set, uses the default GITHUB_TOKEN."
+        required: false
 
 jobs:
   build:
@@ -75,7 +79,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Build and push arch image
         uses: docker/build-push-action@v6
@@ -115,7 +119,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Create and push manifest
         env:
