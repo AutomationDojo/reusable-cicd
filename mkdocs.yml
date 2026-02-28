@@ -23,6 +23,8 @@ plugins:
 
 nav:
   - Home: index.md
+  - Actions:
+      - Helm Repo Init: actions/helm-repo-init.md
   - Workflows:
       - Actionlint: workflows/actionlint.md
       - Cloudflare Pages Cleanup: workflows/cloudflare-pages-cleanup.md
