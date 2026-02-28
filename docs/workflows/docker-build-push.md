@@ -24,7 +24,12 @@ Typically used after a release workflow (e.g. [Simple Semantic Release](semantic
 
 ## Secrets
 
-Uses the default `GITHUB_TOKEN` for GHCR login; no extra secrets are required.
+| Secret | Required | Description |
+|--------|----------|-------------|
+| `GITHUB_TOKEN` | No (automatic) | Default token for GHCR login. Automatically provided by Actions in the caller repo. |
+| `GHCR_TOKEN` | No | Optional token for GHCR login. Use when the default `GITHUB_TOKEN` is not enough (e.g. **org with SSO** on packages, or restricted workflow permissions). Typically a **Personal Access Token (PAT)** with `write:packages` and **SSO authorized** for the organization. When set, it is used instead of `GITHUB_TOKEN`. |
+
+If you get **403 Forbidden** when pushing, try passing a PAT as `GHCR_TOKEN` and authorize SSO for that PAT in the organization.
 
 ## Caller Permissions
 
@@ -65,6 +70,20 @@ jobs:
     uses: AutomationDojo/reusable-cicd/.github/workflows/docker-build-push.yml@main
     with:
       version: ${{ needs.release.outputs.version }}
+    permissions:
+      contents: read
+      packages: write
+```
+
+When the default token cannot push (e.g. 403 due to SSO or org settings), use a PAT with SSO authorized:
+
+```yaml
+  docker:
+    uses: AutomationDojo/reusable-cicd/.github/workflows/docker-build-push.yml@main
+    with:
+      version: ${{ needs.release.outputs.version }}
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}   # PAT with write:packages + SSO authorized
     permissions:
       contents: read
       packages: write
