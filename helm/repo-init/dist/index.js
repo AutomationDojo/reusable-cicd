@@ -31235,7 +31235,7 @@ async function main() {
 
   core.startGroup("Substitute placeholders");
   const filesToSubstitute = [
-    "README.md",
+    "CHART_README.md",
     ".releaserc.yaml",
     ".github/configs/cr.yaml",
     "mkdocs.yml",
@@ -31249,7 +31249,12 @@ async function main() {
   }
   core.endGroup();
 
-  // ── 3. Create artifacthub-pkg.yml ───────────────────────────────────────────
+  // ── 3. Replace README.md with chart readme ──────────────────────────────────
+
+  fs.renameSync("CHART_README.md", "README.md");
+  core.info("Renamed CHART_README.md to README.md");
+
+  // ── 5. Create artifacthub-pkg.yml ───────────────────────────────────────────
 
   core.startGroup("Create artifacthub-pkg.yml");
   const artifacthub = `\
@@ -31271,7 +31276,7 @@ annotations:
   core.info(`Created charts/${chartName}/artifacthub-pkg.yml`);
   core.endGroup();
 
-  // ── 4. Create README.md.gotmpl ──────────────────────────────────────────────
+  // ── 6. Create README.md.gotmpl ──────────────────────────────────────────────
 
   core.startGroup("Create README.md.gotmpl");
   const gotmpl = `\
@@ -31298,12 +31303,12 @@ helm install {{ template "chart.name" . }} {{ template "chart.name" . }}/{{ temp
   core.info(`Created charts/${chartName}/README.md.gotmpl`);
   core.endGroup();
 
-  // ── 5. Remove init workflow ─────────────────────────────────────────────────
+  // ── 7. Remove init workflow ─────────────────────────────────────────────────
 
   fs.rmSync(".github/workflows/init-repo.yml", { force: true });
   core.info("Removed .github/workflows/init-repo.yml");
 
-  // ── 6. Commit and push ──────────────────────────────────────────────────────
+  // ── 8. Commit and push ──────────────────────────────────────────────────────
 
   core.startGroup("Commit and push");
   await exec.exec("git", ["config", "user.name", "github-actions[bot]"]);
