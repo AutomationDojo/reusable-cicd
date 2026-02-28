@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/user-cube/reusable-cicd/compare/v1.8.4...v1.9.0) (2026-02-28)
+
+
+### Features
+
+* add pre-test, test-cmd and build-cmd inputs to build-and-test-pr workflow ([deb7350](https://github.com/user-cube/reusable-cicd/commit/deb73508e75ed094e81ed7935e83047ac989eacc))
+
 ## [1.8.4](https://github.com/user-cube/reusable-cicd/compare/v1.8.3...v1.8.4) (2026-02-28)
 
 
