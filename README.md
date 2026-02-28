@@ -1,6 +1,16 @@
 # Reusable CI/CD
 
+[![Documentation](https://img.shields.io/badge/docs-reusable--cicd.automationdojo.org-blue)](https://reusable-cicd.automationdojo.org)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
+
 A collection of reusable GitHub Actions workflows for common CI/CD tasks. Call them from any repository with [`workflow_call`](https://docs.github.com/en/actions/sharing-automations/reusing-workflows).
+
+## Why use this?
+
+- **DRY** — Avoid duplicating CI/CD config across repositories
+- **Centralized maintenance** — Updates and fixes in one place
+- **Battle-tested** — Workflows used in production and documented
+- **Drop-in** — Reference the workflow, pass inputs, done
 
 ## Available Workflows
 
@@ -8,7 +18,7 @@ A collection of reusable GitHub Actions workflows for common CI/CD tasks. Call t
 |----------|-------------|
 | [Actionlint](https://reusable-cicd.automationdojo.org/workflows/actionlint/) | Lint GitHub Actions workflows on PRs with reviewdog integration |
 | [Cloudflare Pages Cleanup](https://reusable-cicd.automationdojo.org/workflows/cloudflare-pages-cleanup/) | Delete all Cloudflare Pages deployments for a project |
-| [Docker Build and Push](https://reusable-cicd.automationdojo.org/workflows/docker-build-push/) | Build multi-platform Docker images (AMD64/ARM64 on native runners) and push to GHCR |
+| [Docker Build and Push](https://reusable-cicd.automationdojo.org/workflows/docker-build-push/) | Build multi-platform Docker images (AMD64/ARM64) and push to GHCR |
 | [Golang CLI Build and Test](https://reusable-cicd.automationdojo.org/workflows/golang-cli-build-and-test/) | Run tests, linting, and build verification for Go CLI apps |
 | [Golang CLI Release](https://reusable-cicd.automationdojo.org/workflows/golang-cli-release/) | Automate semantic versioning and GoReleaser-based releases for Go CLIs |
 | [Helm Docs](https://reusable-cicd.automationdojo.org/workflows/helm-docs/) | Generate Helm chart documentation with helm-docs and optionally commit to PR |
@@ -19,14 +29,9 @@ A collection of reusable GitHub Actions workflows for common CI/CD tasks. Call t
 | [Simple Semantic Release](https://reusable-cicd.automationdojo.org/workflows/semantic-release-simple/) | Automate versioning and changelog generation with semantic-release |
 | [Terraform Docs](https://reusable-cicd.automationdojo.org/workflows/terraform-docs/) | Generate terraform-docs for changed modules and commit to PR |
 
-Most workflows that push tags, commits, or releases use a GitHub App for authentication. They expect the following repository or organization secrets:
-
-- `GITHUB_APP_ID`
-- `GITHUB_APP_PRIVATE_KEY`
-
-See the docs site for details on how to set these up.
-
 ## Quick Start
+
+Add a job to your workflow that calls the reusable workflow:
 
 ```yaml
 jobs:
@@ -34,8 +39,34 @@ jobs:
     uses: AutomationDojo/reusable-cicd/.github/workflows/actionlint.yml@main
 ```
 
-Pass inputs and secrets as needed — see the [full documentation](https://reusable-cicd.automationdojo.org) for details on each workflow.
+With inputs and secrets:
+
+```yaml
+jobs:
+  terraform-docs:
+    uses: AutomationDojo/reusable-cicd/.github/workflows/terraform-docs.yml@main
+    with:
+      token: ${{ secrets.GITHUB_TOKEN }}
+    secrets: inherit
+```
+
+See the [full documentation](https://reusable-cicd.automationdojo.org) for inputs, secrets, and examples per workflow.
+
+## GitHub App Setup
+
+Workflows that push commits, tags, or releases use a GitHub App for authentication. Configure these secrets at the repository or organization level:
+
+| Secret | Description |
+|--------|-------------|
+| `GITHUB_APP_ID` | GitHub App ID |
+| `GITHUB_APP_PRIVATE_KEY` | App private key (PEM) |
+
+Detailed setup instructions at [reusable-cicd.automationdojo.org](https://reusable-cicd.automationdojo.org).
 
 ## Documentation
 
-Full docs are available at [reusable-cicd.automationdojo.org](https://reusable-cicd.automationdojo.org).
+Full docs at **[reusable-cicd.automationdojo.org](https://reusable-cicd.automationdojo.org)**.
+
+## License
+
+[Apache 2.0](LICENSE)
