@@ -1,3 +1,10 @@
+## [1.8.4](https://github.com/user-cube/reusable-cicd/compare/v1.8.3...v1.8.4) (2026-02-28)
+
+
+### Bug Fixes
+
+* add shared scripts ([522e3bb](https://github.com/user-cube/reusable-cicd/commit/522e3bb8aba80ec00e8cfd05298c755e087d6ee9))
+
 ## [1.8.3](https://github.com/user-cube/reusable-cicd/compare/v1.8.2...v1.8.3) (2026-02-28)
 
 
