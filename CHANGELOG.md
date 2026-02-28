@@ -1,3 +1,10 @@
+## [1.11.4](https://github.com/AutomationDojo/reusable-cicd/compare/v1.11.3...v1.11.4) (2026-02-28)
+
+
+### Bug Fixes
+
+* add support for non root Dockerfile ([#21](https://github.com/AutomationDojo/reusable-cicd/issues/21)) ([4640bde](https://github.com/AutomationDojo/reusable-cicd/commit/4640bde265c6c8adff50a751bd1e91b74c30932c))
+
 ## [1.11.3](https://github.com/AutomationDojo/reusable-cicd/compare/v1.11.2...v1.11.3) (2026-02-28)
 
 
