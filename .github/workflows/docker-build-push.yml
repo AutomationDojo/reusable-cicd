@@ -95,9 +95,10 @@ jobs:
       - name: Create and push manifest
         env:
           IMAGE: ${{ steps.meta.outputs.image }}
+          VERSION: ${{ inputs.version }}
         run: |
           docker buildx imagetools create \
-            -t "${IMAGE}:v${{ inputs.version }}" \
+            -t "${IMAGE}:v${VERSION}" \
             -t "${IMAGE}:latest" \
-            "${IMAGE}:v${{ inputs.version }}-amd64" \
-            "${IMAGE}:v${{ inputs.version }}-arm64"
+            "${IMAGE}:v${VERSION}-amd64" \
+            "${IMAGE}:v${VERSION}-arm64"
