@@ -17,11 +17,11 @@ concurrency:
 
 jobs:
   release:
-    uses: user-cube/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
     secrets:
-      GITHUB_APP_ID: ${{ secrets.DEVOPS_BUDDY_APP_ID }}
-      GITHUB_APP_PRIVATE_KEY: ${{ secrets.DEVOPS_BUDDY_PRIVATE_KEY }}
+      GITHUB_APP_ID: ${{ secrets.AUTOMATION_DOJO_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.AUTOMATION_DOJO_PRIVATE_KEY }}
 
   docs:
     needs: release
-    uses: user-cube/reusable-cicd/.github/workflows/mkdocs_deploy.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/mkdocs_deploy.yml@main

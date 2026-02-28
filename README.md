@@ -31,7 +31,7 @@ See the docs site for details on how to set these up.
 ```yaml
 jobs:
   lint:
-    uses: user-cube/reusable-cicd/.github/workflows/actionlint.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/actionlint.yml@main
 ```
 
 Pass inputs and secrets as needed — see the [full documentation](https://reusable-cicd.ruicoelho.dev) for details on each workflow.

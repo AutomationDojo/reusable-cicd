@@ -26,7 +26,7 @@ on:
       scripts-repo:
         description: "Repo containing shared scripts (used when chart-path is set)"
         type: string
-        default: "user-cube/reusable-cicd"
+        default: "AutomationDojo/reusable-cicd"
     outputs:
       new-release:
         description: "Whether a new release was published"

@@ -35,7 +35,7 @@ jobs:
     permissions:
       contents: write
       # packages: write  # add this if you set push_oci: true
-    uses: user-cube/reusable-cicd/.github/workflows/helm-releaser.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/helm-releaser.yml@main
     with:
       charts_dir: "."
       # config: ".github/cr.yaml"   # optional

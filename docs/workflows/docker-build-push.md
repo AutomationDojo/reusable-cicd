@@ -51,7 +51,7 @@ permissions:
 
 jobs:
   release:
-    uses: user-cube/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
     secrets:
       GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
       GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
@@ -60,7 +60,7 @@ jobs:
     name: Build and Push Docker Image
     needs: release
     if: needs.release.outputs.new-release == 'true'
-    uses: user-cube/reusable-cicd/.github/workflows/docker-build-push.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/docker-build-push.yml@main
     with:
       version: ${{ needs.release.outputs.version }}
     permissions:
@@ -72,7 +72,7 @@ With custom context and platforms:
 
 ```yaml
   docker:
-    uses: user-cube/reusable-cicd/.github/workflows/docker-build-push.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/docker-build-push.yml@main
     with:
       version: ${{ needs.release.outputs.version }}
       context: ./app

@@ -40,7 +40,7 @@ permissions:
 
 jobs:
   terraform-docs:
-    uses: user-cube/reusable-cicd/.github/workflows/terraform-docs.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/terraform-docs.yml@main
 ```
 
 ### With custom modules path
@@ -60,7 +60,7 @@ permissions:
 
 jobs:
   terraform-docs:
-    uses: user-cube/reusable-cicd/.github/workflows/terraform-docs.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/terraform-docs.yml@main
     with:
       modules-path: infra
       git-commit-message: "chore: regenerate tf docs"

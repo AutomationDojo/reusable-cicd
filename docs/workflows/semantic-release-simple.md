@@ -55,7 +55,7 @@ concurrency:
 
 jobs:
   release:
-    uses: user-cube/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
     secrets:
       GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
       GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
@@ -75,7 +75,7 @@ permissions:
 
 jobs:
   release:
-    uses: user-cube/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
     secrets:
       GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
       GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}

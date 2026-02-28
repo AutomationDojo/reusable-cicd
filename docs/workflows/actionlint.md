@@ -35,5 +35,5 @@ permissions:
 
 jobs:
   actionlint:
-    uses: user-cube/reusable-cicd/.github/workflows/actionlint.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/actionlint.yml@main
 ```

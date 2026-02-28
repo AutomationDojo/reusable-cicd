@@ -83,7 +83,7 @@ jobs:
     name: Build and Publish Docs
     needs: [release, publish]
     if: needs.release.outputs.new-release == 'true'
-    uses: user-cube/reusable-cicd/.github/workflows/mkdoc-helm_deploy.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/mkdoc-helm_deploy.yml@main
     with:
       python-version: "3.x"
       docs-subdir: "docs"

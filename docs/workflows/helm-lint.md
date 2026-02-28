@@ -23,7 +23,7 @@ on:
 
 jobs:
   lint:
-    uses: user-cube/reusable-cicd/.github/workflows/helm-lint.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/helm-lint.yml@main
     with:
       charts_dir: "charts"
 ```
@@ -33,7 +33,7 @@ jobs:
 ```yaml
 jobs:
   lint:
-    uses: user-cube/reusable-cicd/.github/workflows/helm-lint.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/helm-lint.yml@main
     with:
       config: ".github/ct.yaml"
 ```

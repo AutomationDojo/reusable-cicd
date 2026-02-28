@@ -20,7 +20,7 @@ on:
 
 jobs:
   cleanup:
-    uses: user-cube/reusable-cicd/.github/workflows/cloudflare-pages_cleanup.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/cloudflare-pages_cleanup.yml@main
     secrets:
       CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
       CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}

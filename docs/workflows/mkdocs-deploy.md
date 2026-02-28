@@ -51,7 +51,7 @@ concurrency:
 
 jobs:
   mkdocs-deploy:
-    uses: user-cube/reusable-cicd/.github/workflows/mkdocs_deploy.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/mkdocs_deploy.yml@main
 ```
 
 ### With custom packages
@@ -70,7 +70,7 @@ permissions:
 
 jobs:
   mkdocs-deploy:
-    uses: user-cube/reusable-cicd/.github/workflows/mkdocs_deploy.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/mkdocs_deploy.yml@main
     with:
       mkdocs-packages: "mkdocs-material mkdocs-minify-plugin"
 ```

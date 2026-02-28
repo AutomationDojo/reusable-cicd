@@ -35,7 +35,7 @@ permissions:
 
 jobs:
   build-and-test:
-    uses: user-cube/reusable-cicd/.github/workflows/golang-cli-apps_build-and-test-pr.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/golang-cli-apps_build-and-test-pr.yml@main
     with:
       go-version-file: go.mod
       go-sum-file: go.sum

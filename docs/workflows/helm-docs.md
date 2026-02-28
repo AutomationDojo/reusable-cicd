@@ -52,7 +52,7 @@ permissions:
 
 jobs:
   helm-docs:
-    uses: user-cube/reusable-cicd/.github/workflows/helm-docs.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/helm-docs.yml@main
     secrets:
       GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
       GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
@@ -65,7 +65,7 @@ To only verify that docs are up to date (e.g. in CI), set `git_push: false` and 
 ```yaml
 jobs:
   helm-docs-check:
-    uses: user-cube/reusable-cicd/.github/workflows/helm-docs.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/helm-docs.yml@main
     with:
       chart_search_root: "charts"
       git_push: false
@@ -79,7 +79,7 @@ For a check-only flow you can avoid `contents: write` by running helm-docs in a 
 ```yaml
 jobs:
   helm-docs:
-    uses: user-cube/reusable-cicd/.github/workflows/helm-docs.yml@main
+    uses: AutomationDojo/reusable-cicd/.github/workflows/helm-docs.yml@main
     with:
       chart_search_root: "charts"
       values_file: "values.yaml"
