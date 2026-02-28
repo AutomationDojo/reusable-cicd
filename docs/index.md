@@ -10,6 +10,7 @@ A collection of reusable GitHub Actions workflows and composite actions for comm
 - [MkDocs Deploy](workflows/mkdocs-deploy.md) — Build and deploy MkDocs sites to GitHub Pages.
 - [MkDocs + Helm Pages](workflows/mkdoc-helm_deploy.md) — Build MkDocs and publish into an existing Helm Pages branch.
 - [Simple Semantic Release](workflows/semantic-release-simple.md) — Automate versioning and changelog generation with semantic-release.
+- [Docker Build and Push](workflows/docker-build-push.md) — Build multi-platform Docker images and push to GHCR (e.g. after a release).
 - [Terraform Docs](workflows/terraform-docs.md) — Generate Terraform module docs and commit back to the PR.
 - [Helm Lint](workflows/helm-lint.md) — Lint Helm charts with chart-testing (`ct lint`) on pull requests.
 - [Helm Docs](workflows/helm-docs.md) — Generate chart documentation with helm-docs and optionally commit back to the PR.
