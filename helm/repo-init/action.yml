@@ -1,0 +1,22 @@
+name: Helm Repo Init
+description: >
+  Initialises a Helm chart repository created from the helmchart-repo-template.
+  Runs helm create, substitutes CHART_NAME/GITHUB_OWNER placeholders, creates
+  artifacthub-pkg.yml and README.md.gotmpl, then commits and pushes everything.
+
+inputs:
+  chart-name:
+    description: Name of the Helm chart (defaults to the repository name)
+    required: false
+    default: ${{ github.event.repository.name }}
+  github-owner:
+    description: GitHub owner / organisation (defaults to the repository owner)
+    required: false
+    default: ${{ github.repository_owner }}
+  commit-token:
+    description: Token used to push the initialisation commit
+    required: true
+
+runs:
+  using: node20
+  main: dist/index.js

@@ -1,0 +1,17 @@
+{
+  "name": "helm-repo-init",
+  "version": "1.0.0",
+  "description": "GitHub Action to initialise a Helm chart repo from the helmchart-repo-template",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build index.js -o dist --license licenses.txt",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/exec": "^1.1.1"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.3"
+  }
+}
