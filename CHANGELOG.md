@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.9.0...v1.10.0) (2026-02-28)
+
+
+### Features
+
+* node workflows ([#16](https://github.com/AutomationDojo/reusable-cicd/issues/16)) ([225a749](https://github.com/AutomationDojo/reusable-cicd/commit/225a749009572a160cbca150d31a5c97d36329f8))
+
 # [1.9.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.8.4...v1.9.0) (2026-02-28)
 
 
