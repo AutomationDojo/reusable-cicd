@@ -13,6 +13,10 @@ inputs:
     description: GitHub owner / organisation (defaults to the repository owner)
     required: false
     default: ${{ github.repository_owner }}
+  chart-description:
+    description: Short description of the chart (defaults to "Helm chart for <chart-name>.")
+    required: false
+    default: ""
   commit-token:
     description: Token used to push the initialisation commit
     required: true
