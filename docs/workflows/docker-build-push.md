@@ -1,8 +1,15 @@
 # Docker Build and Push
 
-Reusable workflow that builds a multi-platform Docker image and pushes it to GitHub Container Registry (GHCR). It checks out the tag for the given version, uses QEMU and Docker Buildx for `linux/amd64` and `linux/arm64`, and publishes `ghcr.io/<repo>:v<version>` and `ghcr.io/<repo>:latest` with GitHub Actions cache.
+Reusable workflow that builds a multi-platform Docker image and pushes it to GitHub Container Registry (GHCR). **Each platform is built in a separate job in parallel on native runners**—no emulation (e.g. QEMU): **AMD64** runs on `ubuntu-latest` and **ARM64** on `ubuntu-24.04-arm`. When both are done, a final job creates the multi-arch manifest. It checks out the tag for the given version, uses Docker Buildx, and publishes `ghcr.io/<repo>:v<version>` and `ghcr.io/<repo>:latest` with GitHub Actions cache.
 
 Typically used after a release workflow (e.g. [Simple Semantic Release](semantic-release-simple.md)), passing the new version.
+
+## Runners
+
+| Platform   | Runner            | Architecture |
+|-----------|-------------------|--------------|
+| linux/amd64 | `ubuntu-latest`   | AMD64 (native) |
+| linux/arm64 | `ubuntu-24.04-arm` | ARM64 (native) |
 
 ## Inputs
 
