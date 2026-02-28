@@ -71,6 +71,7 @@ jobs:
 | :--- | :--- | :--- | :--- |
 | `chart-name` | Name of the Helm chart | No | Repository name |
 | `github-owner` | GitHub owner / organisation | No | Repository owner |
+| `chart-description` | Short description of the chart | No | `Helm chart for <chart-name>.` |
 | `commit-token` | Token used to push the initialisation commit | Yes | — |
 
 ## What it does

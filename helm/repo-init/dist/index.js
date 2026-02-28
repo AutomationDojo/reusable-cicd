@@ -31214,12 +31214,14 @@ function replaceInFile(filePath, replacements) {
 async function main() {
   const chartName = core.getInput("chart-name", { required: true });
   const githubOwner = core.getInput("github-owner", { required: true });
+  const chartDescription = core.getInput("chart-description") || `Helm chart for ${chartName}.`;
   const commitToken = core.getInput("commit-token", { required: true });
   const githubRepository = process.env.GITHUB_REPOSITORY;
 
   const replacements = [
     ["CHART_NAME", chartName],
     ["GITHUB_OWNER", githubOwner],
+    ["CHART_DESCRIPTION", chartDescription],
   ];
 
   // ── 1. Create Helm chart ────────────────────────────────────────────────────
@@ -31233,12 +31235,14 @@ async function main() {
 
   core.startGroup("Substitute placeholders");
   const filesToSubstitute = [
+    "README.md",
     ".releaserc.yaml",
     ".github/configs/cr.yaml",
     ".github/workflows/release.yml",
     "mkdocs.yml",
     "docs/index.md",
     "docs/usage.md",
+    "docs/configuration.md",
     "docs/development.md",
   ];
   for (const file of filesToSubstitute) {
@@ -31253,7 +31257,7 @@ async function main() {
 version: 0.1.0
 name: ${chartName}
 displayName: ${chartName}
-description: Helm chart for ${chartName}.
+description: ${chartDescription}
 keywords: []
 home: https://github.com/${githubOwner}/${chartName}
 sources:
