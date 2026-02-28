@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/user-cube/reusable-cicd/compare/v1.7.1...v1.8.0) (2026-02-28)
+
+
+### Features
+
+* docker build and push workflow ([3d535f5](https://github.com/user-cube/reusable-cicd/commit/3d535f528e9c33a63d7147848bbeb0b9b221c93b))
+
 ## [1.7.1](https://github.com/user-cube/reusable-cicd/compare/v1.7.0...v1.7.1) (2026-02-24)
 
 
