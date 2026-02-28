@@ -1,3 +1,10 @@
+## [1.8.2](https://github.com/user-cube/reusable-cicd/compare/v1.8.1...v1.8.2) (2026-02-28)
+
+
+### Bug Fixes
+
+* fix checkout to initial branch ([dca2dd4](https://github.com/user-cube/reusable-cicd/commit/dca2dd4240d37296ff67a99e88048a26b6c1b633))
+
 ## [1.8.1](https://github.com/user-cube/reusable-cicd/compare/v1.8.0...v1.8.1) (2026-02-28)
 
 
