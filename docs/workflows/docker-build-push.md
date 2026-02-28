@@ -18,6 +18,7 @@ Typically used after a release workflow (e.g. [Simple Semantic Release](semantic
 | `version` | `string` | — | **Required.** Release version without the `v` prefix; used for the image tag and for checking out `v<version>`. |
 | `context` | `string` | `"."` | Docker build context path. |
 | `dockerfile` | `string` | `Dockerfile` | Path to the Dockerfile relative to the context (e.g. `Dockerfile`, `Dockerfile.prod`, `docker/Dockerfile`). |
+| `image-name` | `string` | `""` | Optional suffix for the image name. When set, the image is `ghcr.io/owner/repo/<image-name>` (lowercase); when empty, `ghcr.io/owner/repo`. Use this when you have **multiple images** in the same repo (e.g. different Dockerfiles). |
 | `platforms` | `string` | `linux/amd64,linux/arm64` | Comma-separated list of platforms to build. |
 | `push` | `boolean` | `true` | Whether to push the image to GHCR. |
 
@@ -93,6 +94,50 @@ When the Dockerfile lives in a subdirectory of the context, pass the path relati
       version: ${{ needs.release.outputs.version }}
       context: .
       dockerfile: docker/Dockerfile
+    permissions:
+      contents: read
+      packages: write
+```
+
+### Multiple images in the same repo (two or more Dockerfiles)
+
+If you build several images from the same repo (e.g. one Dockerfile for an API, another for a worker), use **`image-name`** so each image gets a different name under your repo on GHCR. Without it, all images would be tagged as `ghcr.io/owner/repo` and would overwrite each other.
+
+| `image-name` | Resulting image |
+|--------------|------------------|
+| *(empty)*    | `ghcr.io/owner/repo:v1.0.0` |
+| `api`        | `ghcr.io/owner/repo/api:v1.0.0` |
+| `worker`     | `ghcr.io/owner/repo/worker:v1.0.0` |
+
+Example: build two images (e.g. `Dockerfile.api` and `Dockerfile.worker`) after a release:
+
+```yaml
+  release:
+    uses: AutomationDojo/reusable-cicd/.github/workflows/semantic-release_simple-release.yml@main
+    secrets:
+      GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
+
+  docker-api:
+    needs: release
+    if: needs.release.outputs.new-release == 'true'
+    uses: AutomationDojo/reusable-cicd/.github/workflows/docker-build-push.yml@main
+    with:
+      version: ${{ needs.release.outputs.version }}
+      dockerfile: Dockerfile.api
+      image-name: api
+    permissions:
+      contents: read
+      packages: write
+
+  docker-worker:
+    needs: release
+    if: needs.release.outputs.new-release == 'true'
+    uses: AutomationDojo/reusable-cicd/.github/workflows/docker-build-push.yml@main
+    with:
+      version: ${{ needs.release.outputs.version }}
+      dockerfile: Dockerfile.worker
+      image-name: worker
     permissions:
       contents: read
       packages: write
