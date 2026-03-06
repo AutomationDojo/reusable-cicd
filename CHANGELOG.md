@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.11.6...v1.12.0) (2026-03-06)
+
+
+### Features
+
+* expose outputs ([#24](https://github.com/AutomationDojo/reusable-cicd/issues/24)) ([e2fc9ff](https://github.com/AutomationDojo/reusable-cicd/commit/e2fc9ff5fbd092d4ad5315f15ede05721fb96af6))
+
 ## [1.11.6](https://github.com/AutomationDojo/reusable-cicd/compare/v1.11.5...v1.11.6) (2026-02-28)
 
 
