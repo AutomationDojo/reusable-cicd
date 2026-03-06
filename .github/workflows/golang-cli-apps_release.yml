@@ -32,6 +32,13 @@ on:
       GITHUB_APP_PRIVATE_KEY:
         description: "GitHub App private key"
         required: true
+    outputs:
+      new-release:
+        description: "Whether a new release was published"
+        value: ${{ jobs.release.outputs.new-release }}
+      version:
+        description: "The new release version (without v prefix)"
+        value: ${{ jobs.release.outputs.version }}
 
 jobs:
   release:
