@@ -15,6 +15,7 @@ A collection of reusable GitHub Actions workflows and composite actions for comm
 - [Helm Lint](workflows/helm-lint.md) — Lint Helm charts with chart-testing (`ct lint`) on pull requests.
 - [Helm Docs](workflows/helm-docs.md) — Generate chart documentation with helm-docs and optionally commit back to the PR.
 - [Helm Releaser](workflows/helm-releaser.md) — Automate packaging and publishing of Helm charts to GitHub Pages.
+- [ArgoCD Diff Preview](workflows/argocd-diff-preview.md) — Generate ArgoCD manifest diffs on pull requests and post them as PR comments.
 
 ## GitHub App requirements
 

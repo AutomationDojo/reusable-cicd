@@ -1,0 +1,146 @@
+# Reusable workflow for generating ArgoCD diff previews on pull requests.
+# Supports two modes:
+#   - Plain YAML repos: set repo_path to the directory containing Application manifests (default: repo root)
+#   - Helm-rendered repos: set helm_chart_path (and optionally helm_values_files) to pre-render before diffing
+# Posts the diff as a PR comment (updated in place on subsequent runs).
+#
+# Requirements:
+#   - Caller must set `pull-requests: write` permission
+#   - Caller must pass a GitHub PAT (repo read access) via the GH_PAT secret
+name: ArgoCD Diff Preview
+
+on:
+  workflow_call:
+    inputs:
+      repo_path:
+        description: 'Directory containing Application manifests (used when not rendering via Helm). Defaults to repo root.'
+        required: false
+        type: string
+        default: '.'
+      helm_chart_path:
+        description: 'Path to the Helm chart to render into Application manifests. When set, Helm rendering is enabled.'
+        required: false
+        type: string
+        default: ''
+      helm_values_files:
+        description: 'Space-separated list of values files to pass to helm template (e.g. "apps/values/base.yaml apps/values/prod.yaml"). Only used when helm_chart_path is set.'
+        required: false
+        type: string
+        default: ''
+      base_branch:
+        description: 'Base branch to compare against'
+        required: false
+        type: string
+        default: 'main'
+      argocd_version:
+        description: 'ArgoCD Helm chart version to install in the ephemeral cluster. Defaults to latest.'
+        required: false
+        type: string
+        default: ''
+      timeout:
+        description: 'Timeout in seconds for argocd-diff-preview'
+        required: false
+        type: number
+        default: 300
+    secrets:
+      GH_PAT:
+        description: 'GitHub PAT with repo read access (used by argocd-diff-preview to clone the private repo)'
+        required: true
+
+jobs:
+  diff:
+    name: ArgoCD Diff Preview
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout target branch (PR)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Set up Helm
+        if: inputs.helm_chart_path != ''
+        uses: azure/setup-helm@v4
+
+      - name: Prepare manifests — target branch
+        env:
+          HELM_CHART_PATH: ${{ inputs.helm_chart_path }}
+          VALUES_FILES: ${{ inputs.helm_values_files }}
+          REPO_PATH: ${{ inputs.repo_path }}
+        run: |
+          mkdir -p /tmp/argocd-diff/target
+          if [ -n "$HELM_CHART_PATH" ]; then
+            values_args=()
+            for f in $VALUES_FILES; do
+              values_args+=(-f "$f")
+            done
+            helm template "$HELM_CHART_PATH" "${values_args[@]}" --output-dir /tmp/argocd-diff/target
+          else
+            cp -r "$REPO_PATH/." /tmp/argocd-diff/target
+          fi
+
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.base_branch }}
+          clean: false
+
+      - name: Prepare manifests — base branch
+        env:
+          HELM_CHART_PATH: ${{ inputs.helm_chart_path }}
+          VALUES_FILES: ${{ inputs.helm_values_files }}
+          REPO_PATH: ${{ inputs.repo_path }}
+        run: |
+          mkdir -p /tmp/argocd-diff/base
+          if [ -n "$HELM_CHART_PATH" ]; then
+            values_args=()
+            for f in $VALUES_FILES; do
+              values_args+=(-f "$f")
+            done
+            helm template "$HELM_CHART_PATH" "${values_args[@]}" --output-dir /tmp/argocd-diff/base
+          else
+            cp -r "$REPO_PATH/." /tmp/argocd-diff/base
+          fi
+
+      - name: Run argocd-diff-preview
+        env:
+          REPO: ${{ github.repository }}
+          TARGET_BRANCH: ${{ github.head_ref }}
+          BASE_BRANCH: ${{ inputs.base_branch }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          ARGOCD_CHART_VERSION: ${{ inputs.argocd_version }}
+          TIMEOUT: ${{ inputs.timeout }}
+        run: |
+          extra_args=()
+          if [ -n "$ARGOCD_CHART_VERSION" ]; then
+            extra_args+=(--argocd-chart-version "$ARGOCD_CHART_VERSION")
+          fi
+          docker run --rm \
+            -v /tmp/argocd-diff/base:/base-branch \
+            -v /tmp/argocd-diff/target:/target-branch \
+            -v /tmp/argocd-diff/output:/output \
+            -e GITHUB_TOKEN \
+            dagandersen/argocd-diff-preview:latest \
+            --repo "$REPO" \
+            --target-branch "$TARGET_BRANCH" \
+            --base-branch "$BASE_BRANCH" \
+            --local-repo-path-target /target-branch \
+            --local-repo-path-base /base-branch \
+            --output-folder /output \
+            "${extra_args[@]}" \
+            --timeout "$TIMEOUT"
+
+      - name: Post diff as PR comment
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          DIFF_PATH: /tmp/argocd-diff/output/diff.md
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const script = require('./.github/scripts/post-argocd-diff-comment.js');
+            await script({ github, context });
