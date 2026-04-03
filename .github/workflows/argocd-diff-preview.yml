@@ -122,20 +122,16 @@ jobs:
         run: |
           mkdir -p /tmp/argocd-diff/secrets
           if [ -n "$SSH_PRIVATE_KEY" ] && [ -n "$REPO_SSH_URL" ]; then
-            cat > /tmp/argocd-diff/secrets/repo-creds.yaml << EOF
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: private-repo
-            namespace: argocd
-            labels:
-              argocd.argoproj.io/secret-type: repository
-          stringData:
-            type: git
-            url: ${REPO_SSH_URL}
-            sshPrivateKey: |
-          $(echo "$SSH_PRIVATE_KEY" | sed 's/^/      /')
-          EOF
+            yq -n '
+              .apiVersion = "v1" |
+              .kind = "Secret" |
+              .metadata.name = "private-repo" |
+              .metadata.namespace = "argocd" |
+              .metadata.labels["argocd.argoproj.io/secret-type"] = "repository" |
+              .stringData.type = "git" |
+              .stringData.url = strenv(REPO_SSH_URL) |
+              .stringData.sshPrivateKey = strenv(SSH_PRIVATE_KEY)
+            ' > /tmp/argocd-diff/secrets/repo-creds.yaml
           fi
 
       - name: Run argocd-diff-preview
