@@ -94,7 +94,7 @@ jobs:
 
       # workflow_call uses the caller repo as workspace; ./.github/actions would be wrong.
       # Composites are pinned to @main; for local tests of action changes, temporarily use your branch.
-      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@fix/argocd-diff
+      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@main
         with:
           helm_chart_path: ${{ inputs.helm_chart_path }}
           helm_values_files: ${{ inputs.helm_values_files }}
@@ -119,14 +119,14 @@ jobs:
           ref: ${{ inputs.base_branch }}
           clean: false
 
-      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@fix/argocd-diff
+      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@main
         with:
           helm_chart_path: ${{ inputs.helm_chart_path }}
           helm_values_files: ${{ inputs.helm_values_files }}
           repo_path: ${{ inputs.repo_path }}
           output_dir: /tmp/argocd-diff/base
 
-      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-run@fix/argocd-diff
+      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-run@main
         with:
           repo: ${{ github.repository }}
           target_branch: ${{ github.head_ref }}
@@ -152,7 +152,7 @@ jobs:
 
       - name: Post diff as PR comment
         if: always()
-        uses: AutomationDojo/reusable-cicd/.github/actions/post-argocd-diff-comment@fix/argocd-diff
+        uses: AutomationDojo/reusable-cicd/.github/actions/post-argocd-diff-comment@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           diff_path: /tmp/argocd-diff/output/diff.md
