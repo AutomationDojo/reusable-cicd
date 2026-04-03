@@ -85,7 +85,9 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - uses: ./.github/actions/argocd-diff-helm-template
+      # workflow_call uses the caller repo as workspace; ./.github/actions would be wrong.
+      # Composites are pinned to @main; for local tests of action changes, temporarily use your branch.
+      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@fix/argocd-diff
         with:
           helm_chart_path: ${{ inputs.helm_chart_path }}
           helm_values_files: ${{ inputs.helm_values_files }}
@@ -110,14 +112,14 @@ jobs:
           ref: ${{ inputs.base_branch }}
           clean: false
 
-      - uses: ./.github/actions/argocd-diff-helm-template
+      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@fix/argocd-diff
         with:
           helm_chart_path: ${{ inputs.helm_chart_path }}
           helm_values_files: ${{ inputs.helm_values_files }}
           repo_path: ${{ inputs.repo_path }}
           output_dir: /tmp/argocd-diff/base
 
-      - uses: ./.github/actions/argocd-diff-run
+      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-run@fix/argocd-diff
         with:
           repo: ${{ github.repository }}
           target_branch: ${{ github.head_ref }}
