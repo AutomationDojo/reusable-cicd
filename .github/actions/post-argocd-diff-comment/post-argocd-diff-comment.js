@@ -1,17 +1,18 @@
-// Posts argocd-diff-preview output as PR comment(s). Parses per-app <details> blocks, then packs
-// multiple sections into one comment until ~64KiB (GitHub API limit). Splits further only when needed.
-// Markers allow re-runs to sync.
+// Posts argocd-diff-preview output as PR comment(s).
+// - One GitHub comment per Application = one <details>…</details> block (argocd-diff-preview format).
+// - Summary preamble and trailing stats are separate comments when present.
+// - If one app exceeds ~64KB, split its inner body only and repeat <details><summary>…</summary> on each part
+//   so every comment keeps the collapsible “spoiler”.
+// - splitContent() keeps ```diff fences balanced when splitting.
 const fs = require('fs');
 
 const MARKER_RE = /<!-- argocd-diff-preview part (\d+)\/(\d+) -->/;
 
-/** Body budget per comment (GitHub ~65536; leave margin for HTML marker + title line) */
+/** Max characters for the markdown body passed to buildBodies (header is added on top). */
 const MAX_CHUNK_CHARS = 64500;
 
 /**
- * argocd-diff-preview renders each app as <details><summary>…</summary>…</details>
- * (see upstream pkg/diff/markdown.go). Split into: [preamble, app1, app2, …] + optional trailer
- * after the last </details> (selection_changes, stats info_box).
+ * argocd-diff-preview: preamble, then one <details> per app, then optional trailer (stats).
  */
 function splitByApplicationDetails(raw) {
   const firstIdx = raw.indexOf('<details>');
@@ -34,26 +35,42 @@ function splitByApplicationDetails(raw) {
   const chunks = [];
   if (preamble.length) chunks.push(preamble);
   for (const b of blocks) chunks.push(b);
-  if (trailer.length) {
-    const last = chunks[chunks.length - 1];
-    chunks[chunks.length - 1] = `${last}\n\n${trailer}`;
-  }
+  if (trailer.length) chunks.push(trailer);
   return chunks;
 }
 
-/** Room to append closing ``` and start ```diff on the next chunk without exceeding GitHub limit */
+/** Match pkg/diff/markdown.go: markdownSectionHeader + body + markdownSectionFooter */
+function parseDetailsBlock(block) {
+  const re =
+    /^<details>\s*\n<summary>([\s\S]*?)<\/summary>\s*\n<br>\s*\n+([\s\S]*?)<\/details>\s*$/i;
+  const m = block.match(re);
+  if (!m) return null;
+  return { summaryInner: m[1], body: m[2] };
+}
+
 const FENCE_SPLIT_RESERVE = 200;
 
 function isFenceLine(line) {
   return /^\s*```/.test(line);
 }
 
+function peelTrailingFenceOpener(cur) {
+  const lines = cur.split('\n');
+  let i = lines.length - 1;
+  while (i >= 0 && lines[i].trim() === '') i--;
+  if (i < 0) return { splitPrefix: cur, splitOpener: '' };
+  if (!isFenceLine(lines[i])) return { splitPrefix: cur, splitOpener: '' };
+  const splitOpener = lines.slice(i).join('\n');
+  const splitPrefix = lines.slice(0, i).join('\n').trimEnd();
+  return { splitPrefix, splitOpener };
+}
+
 /**
- * Split oversized markdown without breaking fenced code blocks (```diff … ```).
- * Plain line splits corrupt GitHub rendering from the first broken fence onward.
+ * @param {string} text
+ * @param {number} [maxLen]
  */
-function splitContent(text) {
-  if (text.length <= MAX_CHUNK_CHARS) return [text];
+function splitContent(text, maxLen = MAX_CHUNK_CHARS) {
+  if (text.length <= maxLen) return [text];
 
   const lines = text.split('\n');
   const chunks = [];
@@ -71,7 +88,7 @@ function splitContent(text) {
   for (const line of lines) {
     const sep = cur.length ? '\n' : '';
     const candidate = cur + sep + line;
-    const softLimit = inFence ? MAX_CHUNK_CHARS - FENCE_SPLIT_RESERVE : MAX_CHUNK_CHARS;
+    const softLimit = inFence ? maxLen - FENCE_SPLIT_RESERVE : maxLen;
 
     if (candidate.length <= softLimit) {
       cur = candidate;
@@ -80,23 +97,24 @@ function splitContent(text) {
     }
 
     if (cur.length === 0) {
-      if (line.length <= MAX_CHUNK_CHARS) {
+      if (line.length <= maxLen) {
         cur = line;
         tickFenceForLine(line);
       } else {
         if (inFence) {
           let rest = line;
-          while (rest.length > MAX_CHUNK_CHARS - FENCE_SPLIT_RESERVE) {
-            const take = MAX_CHUNK_CHARS - FENCE_SPLIT_RESERVE;
+          while (rest.length > maxLen - FENCE_SPLIT_RESERVE) {
+            const take = maxLen - FENCE_SPLIT_RESERVE;
             pushChunk(`${rest.slice(0, take)}\n\`\`\``);
             rest = `\`\`\`diff\n${rest.slice(take)}`;
           }
           cur = rest;
+          inFence = true;
         } else {
           let rest = line;
-          while (rest.length > MAX_CHUNK_CHARS) {
-            pushChunk(rest.slice(0, MAX_CHUNK_CHARS));
-            rest = rest.slice(MAX_CHUNK_CHARS);
+          while (rest.length > maxLen) {
+            pushChunk(rest.slice(0, maxLen));
+            rest = rest.slice(maxLen);
           }
           cur = rest;
         }
@@ -111,7 +129,23 @@ function splitContent(text) {
       continue;
     }
 
-    // Inside a fenced block: close fence, then continue same diff in a new fence
+    const peeled = peelTrailingFenceOpener(cur);
+    if (peeled.splitOpener) {
+      if (peeled.splitPrefix) pushChunk(peeled.splitPrefix);
+      let opener = peeled.splitOpener.endsWith('\n') ? peeled.splitOpener : `${peeled.splitOpener}\n`;
+      let rest = line;
+      while (rest.length > 0) {
+        const maxBody = maxLen - FENCE_SPLIT_RESERVE - opener.length - 5;
+        const take = Math.min(maxBody, rest.length);
+        pushChunk(`${opener}${rest.slice(0, take)}\n\`\`\``);
+        rest = rest.slice(take);
+        opener = '```diff\n';
+      }
+      cur = '```diff\n';
+      inFence = true;
+      continue;
+    }
+
     pushChunk(`${cur}\n\`\`\`\n`);
     cur = `\`\`\`diff\n${line}`;
     inFence = true;
@@ -121,49 +155,54 @@ function splitContent(text) {
   return chunks;
 }
 
+function wrapDetailsPart(summaryInner, bodyChunk, partIndex, totalParts) {
+  const sum =
+    totalParts > 1
+      ? `${summaryInner} <small>(part ${partIndex + 1}/${totalParts})</small>`
+      : summaryInner;
+  return `<details>\n<summary>${sum}</summary>\n<br>\n\n${bodyChunk.trim()}\n</details>`;
+}
+
 /**
- * Merge consecutive sections into one comment until `budget` chars; only then start a new comment.
- * A single section larger than `budget` is split with splitContent (last resort).
+ * One comment per app; if too large, several comments each with full <details> spoiler.
  */
-function packSegments(segments, budget) {
-  const buckets = [];
-  let cur = '';
+function splitOversizedDetailsBlock(block) {
+  const parsed = parseDetailsBlock(block);
+  if (!parsed) return splitContent(block);
 
-  const flush = () => {
-    if (cur.length) {
-      buckets.push(cur);
-      cur = '';
-    }
-  };
+  const { summaryInner, body } = parsed;
+  const wrapClose = '\n</details>';
+  const worstSummary =
+    summaryInner.length + ' <small>(part 99/99)</small>'.length + '<details>\n<summary></summary>\n<br>\n\n'.length;
+  const innerBudget = Math.max(12000, MAX_CHUNK_CHARS - worstSummary - wrapClose.length - 400);
 
-  for (const seg of segments) {
-    if (!seg.length) continue;
+  let innerParts = body.length <= innerBudget ? [body] : splitContent(body, innerBudget);
+  let wrapped = innerParts.map((inner, i) => wrapDetailsPart(summaryInner, inner, i, innerParts.length));
 
-    if (seg.length > budget) {
-      flush();
-      buckets.push(...splitContent(seg));
-      continue;
-    }
-
-    const sep = cur.length ? '\n\n' : '';
-    const candidate = cur + sep + seg;
-    if (candidate.length <= budget) {
-      cur = candidate;
-    } else {
-      flush();
-      cur = seg;
-    }
+  for (let attempt = 0; attempt < 8 && wrapped.some((w) => w.length > MAX_CHUNK_CHARS); attempt++) {
+    const tighter = Math.floor(innerBudget * 0.82);
+    innerParts = splitContent(body, Math.max(4000, tighter));
+    wrapped = innerParts.map((inner, i) => wrapDetailsPart(summaryInner, inner, i, innerParts.length));
   }
-  flush();
-  return buckets;
+
+  return wrapped;
 }
 
 function chunkForPosting(raw) {
-  const byApp = splitByApplicationDetails(raw);
-  if (!byApp) {
-    return splitContent(raw);
+  const segments = splitByApplicationDetails(raw);
+  if (!segments) return splitContent(raw);
+
+  const out = [];
+  for (const seg of segments) {
+    const trimmed = seg.trim();
+    if (!trimmed) continue;
+    if (trimmed.startsWith('<details>')) {
+      out.push(...splitOversizedDetailsBlock(trimmed));
+    } else {
+      out.push(...splitContent(trimmed));
+    }
   }
-  return packSegments(byApp, MAX_CHUNK_CHARS);
+  return out;
 }
 
 function buildBodies(chunks) {

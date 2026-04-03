@@ -100,9 +100,9 @@ Wraps [`actions/github-script`](https://github.com/actions/github-script) and lo
 
 ### Behaviour (summary)
 
-- Parses `diff.md` into segments (summary preamble, then each `<details>…</details>` app section, with trailing stats merged into the last segment as produced by argocd-diff-preview).
-- **Packs** consecutive segments into one GitHub comment until the ~64 KiB body limit, so you usually get a few comments instead of dozens.
-- If one segment alone is still too large, splits only that segment by size.
+- Parses `diff.md` into segments: summary preamble, each `<details>…</details>` app block, then trailing stats (not merged into the last app block).
+- **One GitHub comment per app** (each full `<details>` block). If one app exceeds ~64 KiB, splits **only that app’s inner body** and posts multiple comments, each with its own `<details><summary>…</summary>` (continuations are labelled `part 2/n` in the summary) so collapsible sections stay valid.
+- When splitting inner markdown, **closes and reopens ` ```diff ` fences** so rendering does not break mid-block.
 - Uses HTML markers in each comment body so re-runs update the same set of comments and remove extras.
 
 ### Direct usage
