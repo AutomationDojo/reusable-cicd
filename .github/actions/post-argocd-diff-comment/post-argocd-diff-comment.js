@@ -41,43 +41,83 @@ function splitByApplicationDetails(raw) {
   return chunks;
 }
 
+/** Room to append closing ``` and start ```diff on the next chunk without exceeding GitHub limit */
+const FENCE_SPLIT_RESERVE = 200;
+
+function isFenceLine(line) {
+  return /^\s*```/.test(line);
+}
+
+/**
+ * Split oversized markdown without breaking fenced code blocks (```diff … ```).
+ * Plain line splits corrupt GitHub rendering from the first broken fence onward.
+ */
 function splitContent(text) {
   if (text.length <= MAX_CHUNK_CHARS) return [text];
 
   const lines = text.split('\n');
   const chunks = [];
   let cur = '';
+  let inFence = false;
 
-  const flush = () => {
-    if (cur.length) {
-      chunks.push(cur);
-      cur = '';
-    }
-  };
+  function tickFenceForLine(line) {
+    if (isFenceLine(line)) inFence = !inFence;
+  }
+
+  function pushChunk(body) {
+    if (body.length) chunks.push(body);
+  }
 
   for (const line of lines) {
-    const sep = cur ? '\n' : '';
+    const sep = cur.length ? '\n' : '';
     const candidate = cur + sep + line;
+    const softLimit = inFence ? MAX_CHUNK_CHARS - FENCE_SPLIT_RESERVE : MAX_CHUNK_CHARS;
 
-    if (candidate.length > MAX_CHUNK_CHARS && cur.length > 0) {
-      flush();
-      cur = line;
-      while (cur.length > MAX_CHUNK_CHARS) {
-        chunks.push(cur.slice(0, MAX_CHUNK_CHARS));
-        cur = cur.slice(MAX_CHUNK_CHARS);
-      }
-    } else if (candidate.length > MAX_CHUNK_CHARS && cur.length === 0) {
-      let rest = line;
-      while (rest.length > MAX_CHUNK_CHARS) {
-        chunks.push(rest.slice(0, MAX_CHUNK_CHARS));
-        rest = rest.slice(MAX_CHUNK_CHARS);
-      }
-      cur = rest;
-    } else {
+    if (candidate.length <= softLimit) {
       cur = candidate;
+      tickFenceForLine(line);
+      continue;
     }
+
+    if (cur.length === 0) {
+      if (line.length <= MAX_CHUNK_CHARS) {
+        cur = line;
+        tickFenceForLine(line);
+      } else {
+        if (inFence) {
+          let rest = line;
+          while (rest.length > MAX_CHUNK_CHARS - FENCE_SPLIT_RESERVE) {
+            const take = MAX_CHUNK_CHARS - FENCE_SPLIT_RESERVE;
+            pushChunk(`${rest.slice(0, take)}\n\`\`\``);
+            rest = `\`\`\`diff\n${rest.slice(take)}`;
+          }
+          cur = rest;
+        } else {
+          let rest = line;
+          while (rest.length > MAX_CHUNK_CHARS) {
+            pushChunk(rest.slice(0, MAX_CHUNK_CHARS));
+            rest = rest.slice(MAX_CHUNK_CHARS);
+          }
+          cur = rest;
+        }
+      }
+      continue;
+    }
+
+    if (!inFence) {
+      pushChunk(cur);
+      cur = line;
+      tickFenceForLine(line);
+      continue;
+    }
+
+    // Inside a fenced block: close fence, then continue same diff in a new fence
+    pushChunk(`${cur}\n\`\`\`\n`);
+    cur = `\`\`\`diff\n${line}`;
+    inFence = true;
   }
-  flush();
+
+  pushChunk(cur);
   return chunks;
 }
 
