@@ -74,11 +74,11 @@ jobs:
         run: |
           mkdir -p /tmp/argocd-diff/target
           if [ -n "$HELM_CHART_PATH" ]; then
-            VALUES_ARGS=""
+            values_args=()
             for f in $VALUES_FILES; do
-              VALUES_ARGS="$VALUES_ARGS -f $f"
+              values_args+=(-f "$f")
             done
-            helm template "$HELM_CHART_PATH" $VALUES_ARGS --output-dir /tmp/argocd-diff/target
+            helm template "$HELM_CHART_PATH" "${values_args[@]}" --output-dir /tmp/argocd-diff/target
           else
             cp -r "$REPO_PATH/." /tmp/argocd-diff/target
           fi
@@ -97,11 +97,11 @@ jobs:
         run: |
           mkdir -p /tmp/argocd-diff/base
           if [ -n "$HELM_CHART_PATH" ]; then
-            VALUES_ARGS=""
+            values_args=()
             for f in $VALUES_FILES; do
-              VALUES_ARGS="$VALUES_ARGS -f $f"
+              values_args+=(-f "$f")
             done
-            helm template "$HELM_CHART_PATH" $VALUES_ARGS --output-dir /tmp/argocd-diff/base
+            helm template "$HELM_CHART_PATH" "${values_args[@]}" --output-dir /tmp/argocd-diff/base
           else
             cp -r "$REPO_PATH/." /tmp/argocd-diff/base
           fi
@@ -115,6 +115,10 @@ jobs:
           ARGOCD_CHART_VERSION: ${{ inputs.argocd_version }}
           TIMEOUT: ${{ inputs.timeout }}
         run: |
+          extra_args=()
+          if [ -n "$ARGOCD_CHART_VERSION" ]; then
+            extra_args+=(--argocd-chart-version "$ARGOCD_CHART_VERSION")
+          fi
           docker run --rm \
             -v /tmp/argocd-diff/base:/base-branch \
             -v /tmp/argocd-diff/target:/target-branch \
@@ -127,7 +131,7 @@ jobs:
             --local-repo-path-target /target-branch \
             --local-repo-path-base /base-branch \
             --output-folder /output \
-            $([ -n "$ARGOCD_CHART_VERSION" ] && echo "--argocd-chart-version $ARGOCD_CHART_VERSION") \
+            "${extra_args[@]}" \
             --timeout "$TIMEOUT"
 
       - name: Post diff as PR comment
