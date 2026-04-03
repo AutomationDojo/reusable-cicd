@@ -1,3 +1,10 @@
+## [1.13.2](https://github.com/AutomationDojo/reusable-cicd/compare/v1.13.1...v1.13.2) (2026-04-03)
+
+
+### Bug Fixes
+
+* argocd ([#27](https://github.com/AutomationDojo/reusable-cicd/issues/27)) ([4c3fa70](https://github.com/AutomationDojo/reusable-cicd/commit/4c3fa70da91909117208ad70ed65aa8c1a140526))
+
 ## [1.13.1](https://github.com/AutomationDojo/reusable-cicd/compare/v1.13.0...v1.13.1) (2026-04-03)
 
 
