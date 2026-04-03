@@ -4,7 +4,7 @@ Reusable workflow that generates an ArgoCD manifest diff for pull requests and p
 
 This workflow is built from three **composite actions** (`argocd-diff-helm-template`, `argocd-diff-run`, `post-argocd-diff-comment`); see [**ArgoCD Diff Preview (composite actions)**](../actions/argocd-diff-preview.md) for inputs, secrets, and direct `uses:` examples.
 
-**PR comments:** the diff is published with the **issue comments** API (same thread as the PR conversation). The first run creates one or more comments; later runs **update** those comments when possible. If a new run produces **fewer** chunks than before (e.g. fewer applications), surplus bot comments are **deleted** — that requires `issues: write` (see [Caller permissions](#caller-permissions)). Comments are split by default **one per Argo CD Application** (each `<details>` block in `diff.md`), with an extra chunk for the summary preamble; very large apps may be split further to stay under GitHub’s ~64 KiB body limit per comment.
+**PR comments:** the diff is published with the **issue comments** API (same thread as the PR conversation). The first run creates one or more comments; later runs **update** those comments when possible. If a new run produces **fewer** chunks than before, surplus bot comments are **deleted** — that requires `issues: write` (see [Caller permissions](#caller-permissions)). The post step parses each Argo CD app as a `<details>` block in `diff.md`, then **packs** several blocks into the same GitHub comment until the ~64 KiB API limit, so you typically get a **small number** of comments instead of one per app. Only when a single app (or the summary) is larger than that limit is it split across multiple comments.
 
 Supports two modes:
 

@@ -100,8 +100,9 @@ Wraps [`actions/github-script`](https://github.com/actions/github-script) and lo
 
 ### Behaviour (summary)
 
-- Splits content into multiple comments when needed: preferably **one GitHub comment per Argo CD Application** (each `<details>…</details>` section produced by argocd-diff-preview), plus the summary block before the first `<details>`, and merges trailing stats/selection text into the last app chunk.
-- If a section still exceeds GitHub’s per-comment size limit, splits that section by size.
+- Parses `diff.md` into segments (summary preamble, then each `<details>…</details>` app section, with trailing stats merged into the last segment as produced by argocd-diff-preview).
+- **Packs** consecutive segments into one GitHub comment until the ~64 KiB body limit, so you usually get a few comments instead of dozens.
+- If one segment alone is still too large, splits only that segment by size.
 - Uses HTML markers in each comment body so re-runs update the same set of comments and remove extras.
 
 ### Direct usage

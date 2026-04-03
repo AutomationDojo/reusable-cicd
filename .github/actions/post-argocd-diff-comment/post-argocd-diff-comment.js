@@ -1,11 +1,12 @@
-// Posts argocd-diff-preview output as PR comment(s). Prefers one GitHub comment per Application
-// (<details> block in diff.md); falls back to size-based chunking. Markers allow re-runs to sync.
+// Posts argocd-diff-preview output as PR comment(s). Parses per-app <details> blocks, then packs
+// multiple sections into one comment until ~64KiB (GitHub API limit). Splits further only when needed.
+// Markers allow re-runs to sync.
 const fs = require('fs');
 
 const MARKER_RE = /<!-- argocd-diff-preview part (\d+)\/(\d+) -->/;
 
-/** Stay under GitHub's ~65536 cap including per-part header */
-const MAX_CHUNK_CHARS = 65200;
+/** Body budget per comment (GitHub ~65536; leave margin for HTML marker + title line) */
+const MAX_CHUNK_CHARS = 64500;
 
 /**
  * argocd-diff-preview renders each app as <details><summary>…</summary>…</details>
@@ -80,21 +81,49 @@ function splitContent(text) {
   return chunks;
 }
 
-/** One comment per app when structure matches; oversized sections still split by size */
+/**
+ * Merge consecutive sections into one comment until `budget` chars; only then start a new comment.
+ * A single section larger than `budget` is split with splitContent (last resort).
+ */
+function packSegments(segments, budget) {
+  const buckets = [];
+  let cur = '';
+
+  const flush = () => {
+    if (cur.length) {
+      buckets.push(cur);
+      cur = '';
+    }
+  };
+
+  for (const seg of segments) {
+    if (!seg.length) continue;
+
+    if (seg.length > budget) {
+      flush();
+      buckets.push(...splitContent(seg));
+      continue;
+    }
+
+    const sep = cur.length ? '\n\n' : '';
+    const candidate = cur + sep + seg;
+    if (candidate.length <= budget) {
+      cur = candidate;
+    } else {
+      flush();
+      cur = seg;
+    }
+  }
+  flush();
+  return buckets;
+}
+
 function chunkForPosting(raw) {
   const byApp = splitByApplicationDetails(raw);
   if (!byApp) {
     return splitContent(raw);
   }
-  const out = [];
-  for (const piece of byApp) {
-    if (piece.length <= MAX_CHUNK_CHARS) {
-      out.push(piece);
-    } else {
-      out.push(...splitContent(piece));
-    }
-  }
-  return out;
+  return packSegments(byApp, MAX_CHUNK_CHARS);
 }
 
 function buildBodies(chunks) {
@@ -104,7 +133,7 @@ function buildBodies(chunks) {
     const header =
       n <= 1
         ? '<!-- argocd-diff-preview part 1/1 -->\n\n'
-        : `<!-- argocd-diff-preview part ${i}/${n} -->\n\n_(${i}/${n}) · **argocd-diff-preview**_\n\n`;
+        : `<!-- argocd-diff-preview part ${i}/${n} -->\n\n**argocd-diff-preview** · part ${i} of ${n} _(same run; split for GitHub ~64KB limit per comment)_\n\n`;
     return header + content;
   });
 }
