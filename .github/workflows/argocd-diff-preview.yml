@@ -115,24 +115,24 @@ jobs:
           ARGOCD_CHART_VERSION: ${{ inputs.argocd_version }}
           TIMEOUT: ${{ inputs.timeout }}
         run: |
-          extra_args=()
+          mkdir -p /tmp/argocd-diff/output
+          docker_args=(
+            --rm
+            --network=host
+            -v /var/run/docker.sock:/var/run/docker.sock
+            -v /tmp/argocd-diff/base:/base-branch
+            -v /tmp/argocd-diff/target:/target-branch
+            -v /tmp/argocd-diff/output:/output
+            -e REPO
+            -e TARGET_BRANCH
+            -e BASE_BRANCH
+            -e GITHUB_TOKEN
+            -e TIMEOUT
+          )
           if [ -n "$ARGOCD_CHART_VERSION" ]; then
-            extra_args+=(--argocd-chart-version "$ARGOCD_CHART_VERSION")
+            docker_args+=(-e ARGOCD_CHART_VERSION)
           fi
-          docker run --rm \
-            -v /tmp/argocd-diff/base:/base-branch \
-            -v /tmp/argocd-diff/target:/target-branch \
-            -v /tmp/argocd-diff/output:/output \
-            -e GITHUB_TOKEN \
-            dagandersen/argocd-diff-preview:latest \
-            --repo "$REPO" \
-            --target-branch "$TARGET_BRANCH" \
-            --base-branch "$BASE_BRANCH" \
-            --local-repo-path-target /target-branch \
-            --local-repo-path-base /base-branch \
-            --output-folder /output \
-            "${extra_args[@]}" \
-            --timeout "$TIMEOUT"
+          docker run "${docker_args[@]}" dagandersen/argocd-diff-preview:latest
 
       - name: Post diff as PR comment
         if: always()
@@ -142,5 +142,38 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const script = require('./.github/scripts/post-argocd-diff-comment.js');
-            await script({ github, context });
+            const fs = require('fs');
+            const diffPath = process.env.DIFF_PATH;
+
+            let body;
+            if (fs.existsSync(diffPath)) {
+              body = fs.readFileSync(diffPath, 'utf8');
+            } else {
+              body = '> **argocd-diff-preview**: no diff output found — check the workflow logs.';
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(
+              (c) => c.user.type === 'Bot' && c.body.includes('argocd-diff-preview')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
