@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.12.0...v1.13.0) (2026-04-03)
+
+
+### Features
+
+* ArgoCD Diff Preview ([#25](https://github.com/AutomationDojo/reusable-cicd/issues/25)) ([08827bd](https://github.com/AutomationDojo/reusable-cicd/commit/08827bd704bd3e755ec65a52d3050b65f11a5e85))
+
 # [1.12.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.11.6...v1.12.0) (2026-03-06)
 
 
