@@ -61,11 +61,6 @@ on:
         required: false
         type: number
         default: 1048576
-      reusable_cicd_ref:
-        description: Ref for shallow checkout of AutomationDojo/reusable-cicd (loads PR comment script only)
-        required: false
-        type: string
-        default: 'main'
     secrets:
       GH_PAT:
         description: PAT with repo read for argocd-diff-preview GitHub API
@@ -146,29 +141,9 @@ jobs:
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
           max_diff_length: ${{ inputs.max_diff_length }}
 
-      - name: Checkout reusable-cicd (PR comment script)
-        if: always()
-        uses: actions/checkout@v4
-        with:
-          repository: AutomationDojo/reusable-cicd
-          ref: ${{ inputs.reusable_cicd_ref }}
-          path: _reusable-cicd
-          token: ${{ secrets.GH_PAT }}
-
       - name: Post diff as PR comment
         if: always()
-        uses: actions/github-script@v7
-        env:
-          DIFF_PATH: /tmp/argocd-diff/output/diff.md
+        uses: AutomationDojo/reusable-cicd/.github/actions/post-argocd-diff-comment@fix/argocd-diff
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const path = require('path');
-            const scriptPath = path.join(
-              process.env.GITHUB_WORKSPACE,
-              '_reusable-cicd',
-              '.github',
-              'scripts',
-              'post-argocd-diff-comment.js'
-            );
-            await require(scriptPath)({ github, context });
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          diff_path: /tmp/argocd-diff/output/diff.md
