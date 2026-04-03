@@ -4,6 +4,15 @@ Reusable workflow that runs [actionlint](https://github.com/rhysd/actionlint) on
 
 This workflow also runs directly on this repository's PRs.
 
+## Scope (workflows only)
+
+`actionlint` validates **workflow** YAML (`on`, `jobs`, …). It does **not** understand composite or JavaScript action metadata (`action.yml` with `runs:` / `inputs:`). If you run `actionlint .github/actions/foo/action.yml`, you will get false positives such as missing `jobs` — that invocation is invalid. Use:
+
+- `actionlint` (no arguments) — discovers `.github/workflows` in the repo, or
+- `actionlint .github/workflows/some-workflow.yml`
+
+Do not pass `.github/actions/**/action.yml` as workflow files. For YAML/schema checks on composite actions, use another validator if needed.
+
 ## Inputs
 
 | Name | Type | Default | Description |

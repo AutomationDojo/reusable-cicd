@@ -1,0 +1,127 @@
+name: Argocd diff — secrets and docker
+description: yq secrets, optional traverse/render flags, run dagandersen/argocd-diff-preview
+inputs:
+  repo:
+    description: GitHub repository owner/name for argocd-diff-preview
+    required: true
+  target_branch:
+    description: PR head branch name
+    required: true
+  base_branch:
+    description: Base branch to compare against
+    required: true
+  github_token:
+    description: PAT with repo read (tool uses GitHub API)
+    required: true
+  timeout:
+    description: Timeout in seconds for argocd-diff-preview
+    required: true
+  argocd_chart_version:
+    description: Argo CD Helm chart version; empty uses latest
+    required: false
+    default: ''
+  render_method:
+    description: cli | server-api | repo-server-api; empty uses tool default
+    required: false
+    default: ''
+  traverse_app_of_apps:
+    description: Enable experimental app-of-apps traversal (requires repo-server-api)
+    required: false
+    default: 'false'
+  file_regex:
+    description: Optional file-regex filter passed to the tool
+    required: false
+    default: ''
+  ssh_private_key:
+    description: Optional — Argo CD Git SSH private key; set from a workflow secret in the caller
+    required: false
+    default: ''
+  repo_ssh_url:
+    description: Optional — SSH repo URL (e.g. git@github.com:org/repo.git)
+    required: false
+    default: ''
+  sops_age_key:
+    description: Optional — SOPS age key material for helm-secrets; set from a workflow secret in the caller
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - name: Write K8s secrets for Argo CD
+      shell: bash
+      env:
+        SSH_PRIVATE_KEY: ${{ inputs.ssh_private_key }}
+        REPO_SSH_URL: ${{ inputs.repo_ssh_url }}
+        SOPS_AGE_KEY: ${{ inputs.sops_age_key }}
+      run: |
+        mkdir -p /tmp/argocd-diff/secrets
+        if [[ -n "${SSH_PRIVATE_KEY:-}" && -n "${REPO_SSH_URL:-}" ]]; then
+          yq -n '
+            .apiVersion = "v1" |
+            .kind = "Secret" |
+            .metadata.name = "private-repo" |
+            .metadata.namespace = "argocd" |
+            .metadata.labels["argocd.argoproj.io/secret-type"] = "repository" |
+            .stringData.type = "git" |
+            .stringData.url = strenv(REPO_SSH_URL) |
+            .stringData.sshPrivateKey = strenv(SSH_PRIVATE_KEY)
+          ' > /tmp/argocd-diff/secrets/repo-creds.yaml
+        fi
+        if [[ -n "${SOPS_AGE_KEY:-}" ]]; then
+          yq -n '
+            .apiVersion = "v1" |
+            .kind = "Secret" |
+            .metadata.name = "sops-age-key" |
+            .metadata.namespace = "argocd" |
+            .stringData."age-key.txt" = strenv(SOPS_AGE_KEY)
+          ' > /tmp/argocd-diff/secrets/sops-age-key.yaml
+        fi
+
+    - name: Run argocd-diff-preview
+      shell: bash
+      env:
+        REPO: ${{ inputs.repo }}
+        TARGET_BRANCH: ${{ inputs.target_branch }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        TIMEOUT: ${{ inputs.timeout }}
+        ARGOCD_CHART_VERSION: ${{ inputs.argocd_chart_version }}
+        RENDER_METHOD_IN: ${{ inputs.render_method }}
+        TRAVERSE_APP_OF_APPS: ${{ inputs.traverse_app_of_apps }}
+        FILE_REGEX: ${{ inputs.file_regex }}
+      run: |
+        mkdir -p /tmp/argocd-diff/output
+        docker_args=(
+          --rm --network=host
+          -v /var/run/docker.sock:/var/run/docker.sock
+          -v /tmp/argocd-diff/base:/base-branch
+          -v /tmp/argocd-diff/target:/target-branch
+          -v /tmp/argocd-diff/output:/output
+          -v /tmp/argocd-diff/secrets:/secrets
+          -e REPO -e TARGET_BRANCH -e BASE_BRANCH -e GITHUB_TOKEN -e TIMEOUT
+        )
+        if [[ -n "${ARGOCD_CHART_VERSION:-}" ]]; then
+          docker_args+=(-e ARGOCD_CHART_VERSION)
+        fi
+        if [[ -d /tmp/argocd-diff/argocd-config-custom ]]; then
+          docker_args+=(-v /tmp/argocd-diff/argocd-config-custom:/argocd-config)
+        fi
+
+        RENDER_METHOD="${RENDER_METHOD_IN:-}"
+        if [[ "${TRAVERSE_APP_OF_APPS:-false}" == "true" ]]; then
+          docker_args+=(-e TRAVERSE_APP_OF_APPS=true)
+          if [[ -z "$RENDER_METHOD" ]]; then
+            RENDER_METHOD=repo-server-api
+          elif [[ "$RENDER_METHOD" != repo-server-api ]]; then
+            echo "::error::traverse_app_of_apps requires render_method=repo-server-api (got: $RENDER_METHOD)"
+            exit 1
+          fi
+        fi
+        if [[ -n "$RENDER_METHOD" ]]; then
+          docker_args+=(-e "RENDER_METHOD=$RENDER_METHOD")
+        fi
+        if [[ -n "${FILE_REGEX:-}" ]]; then
+          docker_args+=(-e "FILE_REGEX=$FILE_REGEX")
+        fi
+
+        docker run "${docker_args[@]}" dagandersen/argocd-diff-preview:latest

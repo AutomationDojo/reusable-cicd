@@ -2,12 +2,16 @@
 
 Reusable workflow that generates an ArgoCD manifest diff for pull requests and posts it as a PR comment. It uses [argocd-diff-preview](https://github.com/dag-andersen/argocd-diff-preview) to spin up an ephemeral Kind cluster, render manifests through ArgoCD, and compute the diff.
 
+This workflow is built from two **composite actions** (`argocd-diff-helm-template`, `argocd-diff-run`); see [**ArgoCD Diff Preview (composite actions)**](../actions/argocd-diff-preview.md) for inputs, secrets, and direct `uses:` examples.
+
 The PR comment is created on first run and **updated in place** on subsequent runs — no comment spam.
 
 Supports two modes:
 
 - **Plain YAML** — point it at a directory that already contains `Application` manifests
-- **Helm-rendered** — provide a chart path and values files; the workflow pre-renders the chart before diffing
+- **Helm-rendered** — provide a chart path and values files; the workflow pre-renders the chart before diffing (this is the recommended way to handle “generated” child Applications — see [App of apps](https://dag-andersen.github.io/argocd-diff-preview/app-of-apps/), Option 1).
+
+Optional **`traverse_app_of_apps`** + **`render_method: repo-server-api`** matches [Option 2 in the same doc](https://dag-andersen.github.io/argocd-diff-preview/app-of-apps/) when you cannot pre-render; it is experimental and slower.
 
 For private repos, pass `SSH_PRIVATE_KEY` and `REPO_SSH_URL` secrets. The caller is responsible for obtaining these values (e.g. extracting from a secrets manager) before calling this workflow.
 
@@ -15,9 +19,10 @@ For private repos, pass `SSH_PRIVATE_KEY` and `REPO_SSH_URL` secrets. The caller
 
 1. Checkout the PR branch → prepare manifests (copy or `helm template`) → saved to a temp folder
 2. Checkout the base branch → same preparation → saved to another temp folder
-3. If `SSH_PRIVATE_KEY` and `REPO_SSH_URL` are provided, generate an ArgoCD repository secret YAML in `/secrets/`
-4. `argocd-diff-preview` spins up a Kind cluster, installs ArgoCD (with the repo credentials), renders both sets of manifests, and produces a `diff.md`
-5. The diff is posted (or updated) as a PR comment
+3. If `SSH_PRIVATE_KEY` and `REPO_SSH_URL` are provided, generate an ArgoCD repository secret YAML in `/secrets/`; if `SOPS_AGE_KEY` is set, generate `sops-age-key` for helm-secrets in ephemeral Argo CD
+4. Optionally mounts `argocd_config_dir` on `/argocd-config` (see [custom Argo CD installation](https://dag-andersen.github.io/argocd-diff-preview/getting-started/custom-argo-cd-installation/))
+5. `argocd-diff-preview` spins up a Kind cluster, installs ArgoCD (with the repo credentials), renders both sets of manifests, and produces a `diff.md`
+6. The diff is posted (or updated) as a PR comment
 
 > **Note**: The ephemeral cluster adds ~60–90 seconds to each run.
 
@@ -31,6 +36,10 @@ For private repos, pass `SSH_PRIVATE_KEY` and `REPO_SSH_URL` secrets. The caller
 | `base_branch` | Branch to compare against. | No | `main` |
 | `argocd_version` | ArgoCD Helm chart version to install in the ephemeral cluster. When empty, uses the latest. | No | — |
 | `timeout` | Timeout in seconds for argocd-diff-preview. | No | `300` |
+| `argocd_config_dir` | Directory on the PR branch to mount as `/argocd-config` (e.g. `values.yaml` + `values-override.yaml` for helm-secrets / CMPs). | No | — |
+| `render_method` | `cli`, `server-api`, or `repo-server-api`. Empty = tool default. Required `repo-server-api` if `traverse_app_of_apps` is true (enforced when traverse is set and this is empty). | No | — |
+| `traverse_app_of_apps` | Experimental expansion of child Applications (requires `repo-server-api`). Prefer Helm pre-render when children are templated. | No | `false` |
+| `file_regex` | Passed as `--file-regex` (e.g. only root app YAML when using traverse). | No | — |
 
 ## Secrets
 
@@ -39,6 +48,7 @@ For private repos, pass `SSH_PRIVATE_KEY` and `REPO_SSH_URL` secrets. The caller
 | `GH_PAT` | Yes | GitHub PAT with `repo` (read) scope. Required for argocd-diff-preview to interact with the GitHub API on private repositories. |
 | `SSH_PRIVATE_KEY` | No | SSH private key for ArgoCD to clone the repo. Required for private repos. |
 | `REPO_SSH_URL` | No | SSH URL of the repo (e.g. `git@github.com:org/repo.git`). Required when `SSH_PRIVATE_KEY` is set. |
+| `SOPS_AGE_KEY` | No | Contents of your SOPS age private key file (`age-key.txt`). Required if ephemeral Argo CD is configured for helm-secrets. |
 
 ## Caller permissions
 

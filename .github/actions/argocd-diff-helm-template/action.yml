@@ -1,0 +1,44 @@
+name: Argocd diff — prepare manifests
+description: helm template or copy repo_path into argocd-diff base/target folder
+inputs:
+  helm_chart_path:
+    description: If set, run helm template; otherwise copy repo_path
+    required: false
+    default: ''
+  helm_values_files:
+    description: Space-separated -f values for helm
+    required: false
+    default: ''
+  repo_path:
+    description: Directory to copy when not using Helm
+    required: false
+    default: '.'
+  output_dir:
+    description: e.g. /tmp/argocd-diff/target
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Set up Helm
+      if: inputs.helm_chart_path != ''
+      uses: azure/setup-helm@v4
+
+    - name: Render or copy
+      shell: bash
+      env:
+        HELM_CHART_PATH: ${{ inputs.helm_chart_path }}
+        VALUES_FILES: ${{ inputs.helm_values_files }}
+        REPO_PATH: ${{ inputs.repo_path }}
+        OUTPUT_DIR: ${{ inputs.output_dir }}
+      run: |
+        mkdir -p "$OUTPUT_DIR"
+        if [[ -n "$HELM_CHART_PATH" ]]; then
+          values_args=()
+          for f in $VALUES_FILES; do
+            [[ -n "$f" ]] || continue
+            values_args+=(-f "$f")
+          done
+          helm template "$HELM_CHART_PATH" "${values_args[@]}" --output-dir "$OUTPUT_DIR"
+        else
+          cp -r "$REPO_PATH/." "$OUTPUT_DIR"
+        fi

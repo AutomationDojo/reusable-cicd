@@ -1,59 +1,73 @@
-# Reusable workflow for generating ArgoCD diff previews on pull requests.
-# Supports two modes:
-#   - Plain YAML repos: set repo_path to the directory containing Application manifests (default: repo root)
-#   - Helm-rendered repos: set helm_chart_path (and optionally helm_values_files) to pre-render before diffing
-# Posts the diff as a PR comment (updated in place on subsequent runs).
-#
-# For private repos, pass SSH_PRIVATE_KEY and REPO_SSH_URL secrets.
-# The caller is responsible for obtaining these (e.g. decrypting from SOPS) before calling this workflow.
-#
-# Requirements:
-#   - Caller must set `pull-requests: write` permission
-#   - Caller must pass a GitHub PAT (repo read access) via the GH_PAT secret
+# Reusable workflow: Argo CD manifest diff on PRs (argocd-diff-preview).
+# Callers need pull-requests: write and secret GH_PAT (repo read).
+# Details: docs/workflows/argocd-diff-preview.md
 name: ArgoCD Diff Preview
 
 on:
   workflow_call:
     inputs:
       repo_path:
-        description: 'Directory containing Application manifests (used when not rendering via Helm). Defaults to repo root.'
+        description: Directory of Application YAML when not using Helm pre-render
         required: false
         type: string
         default: '.'
       helm_chart_path:
-        description: 'Path to the Helm chart to render into Application manifests. When set, Helm rendering is enabled.'
+        description: Helm chart path for pre-render; empty copies repo_path only
         required: false
         type: string
         default: ''
       helm_values_files:
-        description: 'Space-separated list of values files to pass to helm template (e.g. "apps/values/base.yaml apps/values/prod.yaml"). Only used when helm_chart_path is set.'
+        description: Space-separated values files for helm template
         required: false
         type: string
         default: ''
       base_branch:
-        description: 'Base branch to compare against'
+        description: Branch to diff against
         required: false
         type: string
         default: 'main'
       argocd_version:
-        description: 'ArgoCD Helm chart version to install in the ephemeral cluster. Defaults to latest.'
+        description: Pin Argo CD Helm chart version; empty uses latest
         required: false
         type: string
         default: ''
       timeout:
-        description: 'Timeout in seconds for argocd-diff-preview'
+        description: argocd-diff-preview timeout in seconds
         required: false
         type: number
         default: 300
+      argocd_config_dir:
+        description: Repo-relative dir (PR branch) mounted as /argocd-config (custom Argo CD Helm values)
+        required: false
+        type: string
+        default: ''
+      render_method:
+        description: argocd-diff-preview render method (cli | server-api | repo-server-api)
+        required: false
+        type: string
+        default: ''
+      traverse_app_of_apps:
+        description: Experimental app-of-apps expansion (needs repo-server-api)
+        required: false
+        type: boolean
+        default: false
+      file_regex:
+        description: Optional --file-regex for argocd-diff-preview
+        required: false
+        type: string
+        default: ''
     secrets:
       GH_PAT:
-        description: 'GitHub PAT with repo read access (used by argocd-diff-preview to clone the private repo)'
+        description: PAT with repo read for argocd-diff-preview GitHub API
         required: true
       SSH_PRIVATE_KEY:
-        description: 'SSH private key for ArgoCD to clone the repo. Required for private repos.'
+        description: Optional SSH key for private Git clone in Argo CD
         required: false
       REPO_SSH_URL:
-        description: 'SSH URL of the repo (e.g. git@github.com:org/repo.git). Required when SSH_PRIVATE_KEY is set.'
+        description: Optional SSH repo URL when using SSH_PRIVATE_KEY
+        required: false
+      SOPS_AGE_KEY:
+        description: Optional SOPS age key (helm-secrets) for ephemeral Argo CD
         required: false
 
 jobs:
@@ -71,25 +85,23 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Set up Helm
-        if: inputs.helm_chart_path != ''
-        uses: azure/setup-helm@v4
+      - uses: ./.github/actions/argocd-diff-helm-template
+        with:
+          helm_chart_path: ${{ inputs.helm_chart_path }}
+          helm_values_files: ${{ inputs.helm_values_files }}
+          repo_path: ${{ inputs.repo_path }}
+          output_dir: /tmp/argocd-diff/target
 
-      - name: Prepare manifests — target branch
+      - name: Stage Argo CD Helm values from PR branch
+        if: inputs.argocd_config_dir != ''
         env:
-          HELM_CHART_PATH: ${{ inputs.helm_chart_path }}
-          VALUES_FILES: ${{ inputs.helm_values_files }}
-          REPO_PATH: ${{ inputs.repo_path }}
+          SRC_DIR: ${{ inputs.argocd_config_dir }}
         run: |
-          mkdir -p /tmp/argocd-diff/target
-          if [ -n "$HELM_CHART_PATH" ]; then
-            values_args=()
-            for f in $VALUES_FILES; do
-              values_args+=(-f "$f")
-            done
-            helm template "$HELM_CHART_PATH" "${values_args[@]}" --output-dir /tmp/argocd-diff/target
+          if [[ -d "$SRC_DIR" ]]; then
+            rm -rf /tmp/argocd-diff/argocd-config-custom
+            cp -a "$SRC_DIR" /tmp/argocd-diff/argocd-config-custom
           else
-            cp -r "$REPO_PATH/." /tmp/argocd-diff/target
+            echo "::warning::argocd_config_dir ($SRC_DIR) missing on PR branch — using default image config."
           fi
 
       - name: Checkout base branch
@@ -98,70 +110,27 @@ jobs:
           ref: ${{ inputs.base_branch }}
           clean: false
 
-      - name: Prepare manifests — base branch
-        env:
-          HELM_CHART_PATH: ${{ inputs.helm_chart_path }}
-          VALUES_FILES: ${{ inputs.helm_values_files }}
-          REPO_PATH: ${{ inputs.repo_path }}
-        run: |
-          mkdir -p /tmp/argocd-diff/base
-          if [ -n "$HELM_CHART_PATH" ]; then
-            values_args=()
-            for f in $VALUES_FILES; do
-              values_args+=(-f "$f")
-            done
-            helm template "$HELM_CHART_PATH" "${values_args[@]}" --output-dir /tmp/argocd-diff/base
-          else
-            cp -r "$REPO_PATH/." /tmp/argocd-diff/base
-          fi
+      - uses: ./.github/actions/argocd-diff-helm-template
+        with:
+          helm_chart_path: ${{ inputs.helm_chart_path }}
+          helm_values_files: ${{ inputs.helm_values_files }}
+          repo_path: ${{ inputs.repo_path }}
+          output_dir: /tmp/argocd-diff/base
 
-      - name: Prepare ArgoCD repo credentials
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          REPO_SSH_URL: ${{ secrets.REPO_SSH_URL }}
-        run: |
-          mkdir -p /tmp/argocd-diff/secrets
-          if [ -n "$SSH_PRIVATE_KEY" ] && [ -n "$REPO_SSH_URL" ]; then
-            yq -n '
-              .apiVersion = "v1" |
-              .kind = "Secret" |
-              .metadata.name = "private-repo" |
-              .metadata.namespace = "argocd" |
-              .metadata.labels["argocd.argoproj.io/secret-type"] = "repository" |
-              .stringData.type = "git" |
-              .stringData.url = strenv(REPO_SSH_URL) |
-              .stringData.sshPrivateKey = strenv(SSH_PRIVATE_KEY)
-            ' > /tmp/argocd-diff/secrets/repo-creds.yaml
-          fi
-
-      - name: Run argocd-diff-preview
-        env:
-          REPO: ${{ github.repository }}
-          TARGET_BRANCH: ${{ github.head_ref }}
-          BASE_BRANCH: ${{ inputs.base_branch }}
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-          ARGOCD_CHART_VERSION: ${{ inputs.argocd_version }}
-          TIMEOUT: ${{ inputs.timeout }}
-        run: |
-          mkdir -p /tmp/argocd-diff/output
-          docker_args=(
-            --rm
-            --network=host
-            -v /var/run/docker.sock:/var/run/docker.sock
-            -v /tmp/argocd-diff/base:/base-branch
-            -v /tmp/argocd-diff/target:/target-branch
-            -v /tmp/argocd-diff/output:/output
-            -v /tmp/argocd-diff/secrets:/secrets
-            -e REPO
-            -e TARGET_BRANCH
-            -e BASE_BRANCH
-            -e GITHUB_TOKEN
-            -e TIMEOUT
-          )
-          if [ -n "$ARGOCD_CHART_VERSION" ]; then
-            docker_args+=(-e ARGOCD_CHART_VERSION)
-          fi
-          docker run "${docker_args[@]}" dagandersen/argocd-diff-preview:latest
+      - uses: ./.github/actions/argocd-diff-run
+        with:
+          repo: ${{ github.repository }}
+          target_branch: ${{ github.head_ref }}
+          base_branch: ${{ inputs.base_branch }}
+          github_token: ${{ secrets.GH_PAT }}
+          timeout: ${{ inputs.timeout }}
+          argocd_chart_version: ${{ inputs.argocd_version }}
+          render_method: ${{ inputs.render_method }}
+          traverse_app_of_apps: ${{ inputs.traverse_app_of_apps }}
+          file_regex: ${{ inputs.file_regex }}
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          repo_ssh_url: ${{ secrets.REPO_SSH_URL }}
+          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
       - name: Post diff as PR comment
         if: always()
@@ -170,27 +139,21 @@ jobs:
           DIFF_PATH: /tmp/argocd-diff/output/diff.md
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Inline: caller workspace is not reusable-cicd; cannot require repo-local JS.
           script: |
             const fs = require('fs');
             const diffPath = process.env.DIFF_PATH;
-
-            let body;
-            if (fs.existsSync(diffPath)) {
-              body = fs.readFileSync(diffPath, 'utf8');
-            } else {
-              body = '> **argocd-diff-preview**: no diff output found — check the workflow logs.';
-            }
-
+            let body = fs.existsSync(diffPath)
+              ? fs.readFileSync(diffPath, 'utf8')
+              : '> **argocd-diff-preview**: no diff output found — check the workflow logs.';
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-
             const existing = comments.find(
               (c) => c.user.type === 'Bot' && c.body.includes('argocd-diff-preview')
             );
-
             if (existing) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
