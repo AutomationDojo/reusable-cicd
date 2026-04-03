@@ -20,7 +20,7 @@ A collection of reusable GitHub Actions workflows and composite actions for comm
 ## Composite actions
 
 - [Helm Repo Init](actions/helm-repo-init.md) — Bootstrap a chart repository from the helm chart template.
-- [ArgoCD Diff Preview](actions/argocd-diff-preview.md) — Building blocks for the Argo CD diff workflow (Helm prep + Docker run).
+- [ArgoCD Diff Preview](actions/argocd-diff-preview.md) — Building blocks for the Argo CD diff workflow (Helm prep + Docker run + PR comments).
 
 ## GitHub App requirements
 

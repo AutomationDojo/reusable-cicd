@@ -1,6 +1,6 @@
 # ArgoCD Diff Preview (composite actions)
 
-Two [composite actions](https://docs.github.com/en/actions/creating-actions/creating-a-composite-action) back the reusable workflow [Argo CD Diff Preview](../workflows/argocd-diff-preview.md). You can call them directly from other jobs if you need the same behaviour outside that workflow.
+Three [composite actions](https://docs.github.com/en/actions/creating-actions/creating-a-composite-action) back the reusable workflow [Argo CD Diff Preview](../workflows/argocd-diff-preview.md). You can call them directly from other jobs if you need the same behaviour outside that workflow.
 
 **Source in this repository**
 
@@ -8,6 +8,7 @@ Two [composite actions](https://docs.github.com/en/actions/creating-actions/crea
 | :--- | :--- |
 | Prepare manifests (Helm or copy) | [`.github/actions/argocd-diff-helm-template/action.yml`](https://github.com/AutomationDojo/reusable-cicd/blob/main/.github/actions/argocd-diff-helm-template/action.yml) |
 | Secrets + `argocd-diff-preview` Docker | [`.github/actions/argocd-diff-run/action.yml`](https://github.com/AutomationDojo/reusable-cicd/blob/main/.github/actions/argocd-diff-run/action.yml) |
+| Post `diff.md` as PR comment(s) | [`.github/actions/post-argocd-diff-comment/action.yml`](https://github.com/AutomationDojo/reusable-cicd/blob/main/.github/actions/post-argocd-diff-comment/action.yml) |
 
 ## argocd-diff-helm-template
 
@@ -61,8 +62,9 @@ Expects you have already prepared:
 | `ssh_private_key` | Optional sensitive value — pass `${{ secrets.… }}` from the workflow. | No | `''` |
 | `repo_ssh_url` | Optional; pair with `ssh_private_key` for private Git over SSH. | No | `''` |
 | `sops_age_key` | Optional; pass `${{ secrets.… }}` (age key material) for helm-secrets. | No | `''` |
+| `max_diff_length` | Passed as `MAX_DIFF_LENGTH` to the container (`--max-diff-length` in the tool). Default avoids truncating large monorepo diffs too early. | No | `1048576` |
 
-Composite actions do not use a top-level `secrets:` block in `action.yml`; treat the three fields above as **inputs** whose values you set from the caller’s `secrets` context. GitHub masks them in logs when sourced from `secrets.*`.
+Composite actions do not use a top-level `secrets:` block in `action.yml`; treat the SSH/SOPS fields above as **inputs** whose values you set from the caller’s `secrets` context. GitHub masks them in logs when sourced from `secrets.*`.
 
 ### Direct usage (skeleton)
 
@@ -85,9 +87,38 @@ Composite actions do not use a top-level `secrets:` block in `action.yml`; treat
 
 Omit optional `with` keys or pass empty strings if not needed.
 
+## post-argocd-diff-comment
+
+Wraps [`actions/github-script`](https://github.com/actions/github-script) and loads [`post-argocd-diff-comment.js`](https://github.com/AutomationDojo/reusable-cicd/blob/main/.github/actions/post-argocd-diff-comment/post-argocd-diff-comment.js) from the action directory (`github.action_path`), so callers do **not** need a separate checkout of `reusable-cicd`.
+
+### Inputs
+
+| Input | Description | Required | Default |
+| :--- | :--- | :--- | :--- |
+| `github_token` | Token for the **caller** repository (e.g. `secrets.GITHUB_TOKEN`) — needs permission to list/create/update/delete issue comments on the PR. | **Yes** | — |
+| `diff_path` | Absolute path to `diff.md` (e.g. `/tmp/argocd-diff/output/diff.md`). | **Yes** | — |
+
+### Behaviour (summary)
+
+- Splits content into multiple comments when needed: preferably **one GitHub comment per Argo CD Application** (each `<details>…</details>` section produced by argocd-diff-preview), plus the summary block before the first `<details>`, and merges trailing stats/selection text into the last app chunk.
+- If a section still exceeds GitHub’s per-comment size limit, splits that section by size.
+- Uses HTML markers in each comment body so re-runs update the same set of comments and remove extras.
+
+### Direct usage
+
+```yaml
+- uses: AutomationDojo/reusable-cicd/.github/actions/post-argocd-diff-comment@main
+  if: always()
+  with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    diff_path: /tmp/argocd-diff/output/diff.md
+```
+
+Callers need `issues: write` (and `pull-requests: write` as usual) when using `GITHUB_TOKEN` — see the [workflow doc](../workflows/argocd-diff-preview.md#caller-permissions).
+
 ## How this relates to the reusable workflow
 
-[`.github/workflows/argocd-diff-preview.yml`](https://github.com/AutomationDojo/reusable-cicd/blob/main/.github/workflows/argocd-diff-preview.yml) checks out the PR branch, runs the Helm composite for **target**, optionally copies `argocd_config_dir` to `/tmp/argocd-diff/argocd-config-custom`, checks out the base branch, runs the Helm composite for **base**, then runs **argocd-diff-run**. For most repos, **call the workflow** instead of wiring these actions yourself.
+[`.github/workflows/argocd-diff-preview.yml`](https://github.com/AutomationDojo/reusable-cicd/blob/main/.github/workflows/argocd-diff-preview.yml) checks out the PR branch, runs the Helm composite for **target**, optionally copies `argocd_config_dir` to `/tmp/argocd-diff/argocd-config-custom`, checks out the base branch, runs the Helm composite for **base**, then runs **argocd-diff-run**, then **post-argocd-diff-comment**. For most repos, **call the workflow** instead of wiring these actions yourself.
 
 ## Linting
 
