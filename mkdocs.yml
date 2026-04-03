@@ -40,3 +40,4 @@ nav:
       - Helm Docs: workflows/helm-docs.md
       - Helm Releaser: workflows/helm-releaser.md
       - Docker Build and Push: workflows/docker-build-push.md
+      - ArgoCD Diff Preview: workflows/argocd-diff-preview.md
