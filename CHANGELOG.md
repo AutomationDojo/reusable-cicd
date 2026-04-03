@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/AutomationDojo/reusable-cicd/compare/v1.13.0...v1.13.1) (2026-04-03)
+
+
+### Bug Fixes
+
+* **argocd-diff-preview:** correct docker flags, optional helm render, inline JS ([#26](https://github.com/AutomationDojo/reusable-cicd/issues/26)) ([f09a544](https://github.com/AutomationDojo/reusable-cicd/commit/f09a544be28c541e02c557501e1a5102529b259a))
+
 # [1.13.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.12.0...v1.13.0) (2026-04-03)
 
 
