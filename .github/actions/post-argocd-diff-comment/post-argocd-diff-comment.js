@@ -171,17 +171,22 @@ function splitOversizedDetailsBlock(block) {
   if (!parsed) return splitContent(block);
 
   const { summaryInner, body } = parsed;
-  const wrapClose = '\n</details>';
-  const worstSummary =
-    summaryInner.length + ' <small>(part 99/99)</small>'.length + '<details>\n<summary></summary>\n<br>\n\n'.length;
-  const innerBudget = Math.max(12000, MAX_CHUNK_CHARS - worstSummary - wrapClose.length - 400);
+  const smallWorst = ' <small>(part 99/99)</small>';
+  const overhead =
+    '<details>\n<summary>'.length +
+    summaryInner.length +
+    smallWorst.length +
+    '</summary>\n<br>\n\n'.length +
+    '\n</details>'.length +
+    400;
+  let innerBudget = Math.max(12000, MAX_CHUNK_CHARS - overhead);
 
   let innerParts = body.length <= innerBudget ? [body] : splitContent(body, innerBudget);
   let wrapped = innerParts.map((inner, i) => wrapDetailsPart(summaryInner, inner, i, innerParts.length));
 
   for (let attempt = 0; attempt < 8 && wrapped.some((w) => w.length > MAX_CHUNK_CHARS); attempt++) {
-    const tighter = Math.floor(innerBudget * 0.82);
-    innerParts = splitContent(body, Math.max(4000, tighter));
+    innerBudget = Math.max(4000, Math.floor(innerBudget * 0.82));
+    innerParts = splitContent(body, innerBudget);
     wrapped = innerParts.map((inner, i) => wrapDetailsPart(summaryInner, inner, i, innerParts.length));
   }
 
