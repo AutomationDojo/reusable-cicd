@@ -47,7 +47,7 @@ inputs:
   max_diff_length:
     description: argocd-diff-preview --max-diff-length (chars in diff.md); PR comments are split separately to fit GitHub API
     required: false
-    default: '1048576'
+    default: '20971520'
 runs:
   using: composite
   steps:

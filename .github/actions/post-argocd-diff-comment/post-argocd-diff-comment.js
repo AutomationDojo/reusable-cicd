@@ -212,13 +212,20 @@ function chunkForPosting(raw) {
 
 function buildBodies(chunks) {
   const n = chunks.length;
+  const runUrl = (process.env.WORKFLOW_RUN_URL || '').trim();
+  const artifactName = (process.env.ARTIFACT_NAME || 'argocd-diff-preview').trim();
+  const linkBlock =
+    runUrl.length > 0
+      ? `📎 **Full output** (Markdown/HTML, etc.): open [this workflow run](${runUrl}), then download the **${artifactName}** artifact.\n\n---\n\n`
+      : '';
   return chunks.map((content, idx) => {
     const i = idx + 1;
     const header =
       n <= 1
         ? '<!-- argocd-diff-preview part 1/1 -->\n\n'
         : `<!-- argocd-diff-preview part ${i}/${n} -->\n\n**argocd-diff-preview** · part ${i} of ${n} _(same run; split for GitHub ~64KB limit per comment)_\n\n`;
-    return header + content;
+    const body = idx === 0 && linkBlock ? linkBlock + content : content;
+    return header + body;
   });
 }
 

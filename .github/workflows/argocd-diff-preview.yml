@@ -57,10 +57,10 @@ on:
         type: string
         default: ''
       max_diff_length:
-        description: Max characters in diff.md before argocd-diff-preview truncates (PR comment text is split to fit GitHub API)
+        description: Max characters in diff.md before argocd-diff-preview truncates (--max-diff-length); raise for large monorepos (PR comments are still split to ~64KB each)
         required: false
         type: number
-        default: 1048576
+        default: 20971520
     secrets:
       GH_PAT:
         description: PAT with repo read for argocd-diff-preview GitHub API
@@ -83,6 +83,7 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
+      actions: write
 
     steps:
       - name: Checkout target branch (PR)
@@ -141,9 +142,19 @@ jobs:
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
           max_diff_length: ${{ inputs.max_diff_length }}
 
+      - name: Upload argocd-diff-preview output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: argocd-diff-preview
+          path: /tmp/argocd-diff/output
+          if-no-files-found: warn
+
       - name: Post diff as PR comment
         if: always()
         uses: AutomationDojo/reusable-cicd/.github/actions/post-argocd-diff-comment@fix/argocd-diff
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           diff_path: /tmp/argocd-diff/output/diff.md
+          workflow_run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          artifact_name: argocd-diff-preview

@@ -22,7 +22,8 @@ For private repos, pass `SSH_PRIVATE_KEY` and `REPO_SSH_URL` secrets. The caller
 3. If `SSH_PRIVATE_KEY` and `REPO_SSH_URL` are provided, generate an ArgoCD repository secret YAML in `/secrets/`; if `SOPS_AGE_KEY` is set, generate `sops-age-key` for helm-secrets in ephemeral Argo CD
 4. Optionally mounts `argocd_config_dir` on `/argocd-config` (see [custom Argo CD installation](https://dag-andersen.github.io/argocd-diff-preview/getting-started/custom-argo-cd-installation/))
 5. `argocd-diff-preview` spins up a Kind cluster, installs ArgoCD (with the repo credentials), renders both sets of manifests, and produces a `diff.md` (length capped by `max_diff_length`, forwarded as `MAX_DIFF_LENGTH` to the tool)
-6. **`post-argocd-diff-comment`** reads `diff.md` and creates/updates/deletes PR comments as needed
+6. The full `/tmp/argocd-diff/output` directory is uploaded as the **`argocd-diff-preview`** workflow artifact (`actions: write` on the job)
+7. **`post-argocd-diff-comment`** reads `diff.md` and creates/updates/deletes PR comments as needed; the **first** comment includes a link to the workflow run so reviewers can download the artifact (full Markdown/HTML, etc.) while still browsing the split thread on the PR
 
 > **Note**: The ephemeral cluster adds ~60–90 seconds to each run.
 
@@ -40,7 +41,7 @@ For private repos, pass `SSH_PRIVATE_KEY` and `REPO_SSH_URL` secrets. The caller
 | `render_method` | `cli`, `server-api`, or `repo-server-api`. Empty = tool default. Required `repo-server-api` if `traverse_app_of_apps` is true (enforced when traverse is set and this is empty). | No | — |
 | `traverse_app_of_apps` | Experimental expansion of child Applications (requires `repo-server-api`). Prefer Helm pre-render when children are templated. | No | `false` |
 | `file_regex` | Passed as `--file-regex` (e.g. only root app YAML when using traverse). | No | — |
-| `max_diff_length` | Max size (characters) of `diff.md` before [argocd-diff-preview](https://github.com/dag-andersen/argocd-diff-preview) truncates (`--max-diff-length`). Raise for large repos; PR comment bodies are still split to fit GitHub’s API. | No | `1048576` |
+| `max_diff_length` | Max size (characters) of `diff.md` before [argocd-diff-preview](https://github.com/dag-andersen/argocd-diff-preview) truncates (`--max-diff-length`). Defaults to 20 MiB for large app-of-apps repos; increase further if you still see the tool’s truncation warning. PR comment bodies are split separately (~64 KB per comment). | No | `20971520` |
 
 ## Secrets
 
@@ -60,6 +61,7 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
+  actions: write
 ```
 
 `pull-requests: write` covers the PR; **`issues: write`** is needed because conversation comments are created/updated/deleted via the [issue comments](https://docs.github.com/en/rest/issues/comments) API (`issues.createComment`, `issues.updateComment`, `issues.deleteComment`). This is not the Issues tab — PRs are issues under the hood.
@@ -79,6 +81,7 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
+  actions: write
 
 jobs:
   argocd-diff:
@@ -107,6 +110,7 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
+  actions: write
 
 jobs:
   argocd-diff:
@@ -125,4 +129,5 @@ jobs:
 - `SSH_PRIVATE_KEY` and `REPO_SSH_URL` should be stored as GitHub Actions secrets in the caller repository (**Settings → Secrets → Actions**).
 - The workflow uses Docker and requires a `ubuntu-latest` runner with Docker available (default on GitHub-hosted runners).
 - ArgoCD version can be pinned via `argocd_version` to ensure consistent rendering across runs.
+- The workflow uploads **`argocd-diff-preview`** (full `/tmp/argocd-diff/output`); the first PR comment links to the run so you can download it alongside the chunked comments.
 - Composite actions in this repo are referenced as `AutomationDojo/reusable-cicd/.github/actions/...@ref` from the workflow file — pin `@main` (or a release tag) in production; the ref must expose the same workflow and action versions you expect.

@@ -62,7 +62,7 @@ Expects you have already prepared:
 | `ssh_private_key` | Optional sensitive value — pass `${{ secrets.… }}` from the workflow. | No | `''` |
 | `repo_ssh_url` | Optional; pair with `ssh_private_key` for private Git over SSH. | No | `''` |
 | `sops_age_key` | Optional; pass `${{ secrets.… }}` (age key material) for helm-secrets. | No | `''` |
-| `max_diff_length` | Passed as `MAX_DIFF_LENGTH` to the container (`--max-diff-length` in the tool). Default avoids truncating large monorepo diffs too early. | No | `1048576` |
+| `max_diff_length` | Passed as `MAX_DIFF_LENGTH` to the container (`--max-diff-length` in the tool). Default 20 MiB; raise if the run still logs truncation. | No | `20971520` |
 
 Composite actions do not use a top-level `secrets:` block in `action.yml`; treat the SSH/SOPS fields above as **inputs** whose values you set from the caller’s `secrets` context. GitHub masks them in logs when sourced from `secrets.*`.
 
@@ -97,6 +97,8 @@ Wraps [`actions/github-script`](https://github.com/actions/github-script) and lo
 | :--- | :--- | :--- | :--- |
 | `github_token` | Token for the **caller** repository (e.g. `secrets.GITHUB_TOKEN`) — needs permission to list/create/update/delete issue comments on the PR. | **Yes** | — |
 | `diff_path` | Absolute path to `diff.md` (e.g. `/tmp/argocd-diff/output/diff.md`). | **Yes** | — |
+| `workflow_run_url` | `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` so the first PR comment can link to **Artifacts**. | No | `''` |
+| `artifact_name` | Must match `upload-artifact` `name`; shown in the PR notice. | No | `argocd-diff-preview` |
 
 ### Behaviour (summary)
 
@@ -115,7 +117,7 @@ Wraps [`actions/github-script`](https://github.com/actions/github-script) and lo
     diff_path: /tmp/argocd-diff/output/diff.md
 ```
 
-Callers need `issues: write` (and `pull-requests: write` as usual) when using `GITHUB_TOKEN` — see the [workflow doc](../workflows/argocd-diff-preview.md#caller-permissions).
+Callers need `issues: write`, `actions: write` (artifact upload in the reusable workflow), and `pull-requests: write` as usual — see the [workflow doc](../workflows/argocd-diff-preview.md#caller-permissions).
 
 ## How this relates to the reusable workflow
 
