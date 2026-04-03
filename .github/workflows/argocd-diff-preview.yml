@@ -1,29 +1,23 @@
 # Reusable workflow for generating ArgoCD diff previews on pull requests.
-# Supports two modes:
-#   - Plain YAML repos: set repo_path to the directory containing Application manifests (default: repo root)
-#   - Helm-rendered repos: set helm_chart_path (and optionally helm_values_files) to pre-render before diffing
-# Posts the diff as a PR comment (updated in place on subsequent runs).
+# Pre-renders an umbrella Helm chart to extract Application manifests,
+# then uses argocd-diff-preview to render and diff the resulting manifests.
+# Posts the diff as a PR comment.
 #
 # Requirements:
-#   - Caller must set `pull-requests: write` permission
-#   - Caller must pass a GitHub PAT (repo read access) via the GH_PAT secret
+#   - Caller must pass a GitHub token with `pull-requests: write` permission
+#   - Caller must pass a GitHub PAT (repo read access) for argocd-diff-preview to clone the repo
 name: ArgoCD Diff Preview
 
 on:
   workflow_call:
     inputs:
-      repo_path:
-        description: 'Directory containing Application manifests (used when not rendering via Helm). Defaults to repo root.'
+      apps_chart_path:
+        description: 'Path to the umbrella Helm chart that generates ArgoCD Application manifests'
         required: false
         type: string
-        default: '.'
-      helm_chart_path:
-        description: 'Path to the Helm chart to render into Application manifests. When set, Helm rendering is enabled.'
-        required: false
-        type: string
-        default: ''
+        default: 'apps/'
       helm_values_files:
-        description: 'Space-separated list of values files to pass to helm template (e.g. "apps/values/base.yaml apps/values/prod.yaml"). Only used when helm_chart_path is set.'
+        description: 'Space-separated list of values files to pass to helm template (e.g. "apps/values/base.yaml apps/values/prod.yaml")'
         required: false
         type: string
         default: ''
@@ -33,7 +27,7 @@ on:
         type: string
         default: 'main'
       argocd_version:
-        description: 'ArgoCD Helm chart version to install in the ephemeral cluster. Defaults to latest.'
+        description: 'ArgoCD Helm chart version to install in the ephemeral cluster'
         required: false
         type: string
         default: ''
@@ -63,25 +57,19 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Helm
-        if: inputs.helm_chart_path != ''
         uses: azure/setup-helm@v4
 
-      - name: Prepare manifests — target branch
+      - name: Render Application manifests — target branch
         env:
-          HELM_CHART_PATH: ${{ inputs.helm_chart_path }}
           VALUES_FILES: ${{ inputs.helm_values_files }}
-          REPO_PATH: ${{ inputs.repo_path }}
+          CHART_PATH: ${{ inputs.apps_chart_path }}
         run: |
           mkdir -p /tmp/argocd-diff/target
-          if [ -n "$HELM_CHART_PATH" ]; then
-            values_args=()
-            for f in $VALUES_FILES; do
-              values_args+=(-f "$f")
-            done
-            helm template "$HELM_CHART_PATH" "${values_args[@]}" --output-dir /tmp/argocd-diff/target
-          else
-            cp -r "$REPO_PATH/." /tmp/argocd-diff/target
-          fi
+          VALUES_ARGS=""
+          for f in $VALUES_FILES; do
+            VALUES_ARGS="$VALUES_ARGS -f $f"
+          done
+          helm template "$CHART_PATH" $VALUES_ARGS --output-dir /tmp/argocd-diff/target
 
       - name: Checkout base branch
         uses: actions/checkout@v4
@@ -89,22 +77,17 @@ jobs:
           ref: ${{ inputs.base_branch }}
           clean: false
 
-      - name: Prepare manifests — base branch
+      - name: Render Application manifests — base branch
         env:
-          HELM_CHART_PATH: ${{ inputs.helm_chart_path }}
           VALUES_FILES: ${{ inputs.helm_values_files }}
-          REPO_PATH: ${{ inputs.repo_path }}
+          CHART_PATH: ${{ inputs.apps_chart_path }}
         run: |
           mkdir -p /tmp/argocd-diff/base
-          if [ -n "$HELM_CHART_PATH" ]; then
-            values_args=()
-            for f in $VALUES_FILES; do
-              values_args+=(-f "$f")
-            done
-            helm template "$HELM_CHART_PATH" "${values_args[@]}" --output-dir /tmp/argocd-diff/base
-          else
-            cp -r "$REPO_PATH/." /tmp/argocd-diff/base
-          fi
+          VALUES_ARGS=""
+          for f in $VALUES_FILES; do
+            VALUES_ARGS="$VALUES_ARGS -f $f"
+          done
+          helm template "$CHART_PATH" $VALUES_ARGS --output-dir /tmp/argocd-diff/base
 
       - name: Run argocd-diff-preview
         env:
@@ -115,10 +98,6 @@ jobs:
           ARGOCD_CHART_VERSION: ${{ inputs.argocd_version }}
           TIMEOUT: ${{ inputs.timeout }}
         run: |
-          extra_args=()
-          if [ -n "$ARGOCD_CHART_VERSION" ]; then
-            extra_args+=(--argocd-chart-version "$ARGOCD_CHART_VERSION")
-          fi
           docker run --rm \
             -v /tmp/argocd-diff/base:/base-branch \
             -v /tmp/argocd-diff/target:/target-branch \
@@ -131,16 +110,47 @@ jobs:
             --local-repo-path-target /target-branch \
             --local-repo-path-base /base-branch \
             --output-folder /output \
-            "${extra_args[@]}" \
+            $([ -n "$ARGOCD_CHART_VERSION" ] && echo "--argocd-chart-version $ARGOCD_CHART_VERSION") \
             --timeout "$TIMEOUT"
 
       - name: Post diff as PR comment
         if: always()
         uses: actions/github-script@v7
-        env:
-          DIFF_PATH: /tmp/argocd-diff/output/diff.md
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const script = require('./.github/scripts/post-argocd-diff-comment.js');
-            await script({ github, context });
+            const fs = require('fs');
+            const diffPath = '/tmp/argocd-diff/output/diff.md';
+
+            let body;
+            if (fs.existsSync(diffPath)) {
+              body = fs.readFileSync(diffPath, 'utf8');
+            } else {
+              body = '> **argocd-diff-preview**: no diff output found — check the workflow logs.';
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('argocd-diff-preview')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
