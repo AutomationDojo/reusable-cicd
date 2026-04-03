@@ -56,6 +56,16 @@ on:
         required: false
         type: string
         default: ''
+      max_diff_length:
+        description: Max characters in diff.md before argocd-diff-preview truncates (PR comment text is split to fit GitHub API)
+        required: false
+        type: number
+        default: 1048576
+      reusable_cicd_ref:
+        description: Ref for shallow checkout of AutomationDojo/reusable-cicd (loads PR comment script only)
+        required: false
+        type: string
+        default: 'main'
     secrets:
       GH_PAT:
         description: PAT with repo read for argocd-diff-preview GitHub API
@@ -77,6 +87,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      issues: write
 
     steps:
       - name: Checkout target branch (PR)
@@ -133,6 +144,16 @@ jobs:
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
           repo_ssh_url: ${{ secrets.REPO_SSH_URL }}
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
+          max_diff_length: ${{ inputs.max_diff_length }}
+
+      - name: Checkout reusable-cicd (PR comment script)
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          repository: AutomationDojo/reusable-cicd
+          ref: ${{ inputs.reusable_cicd_ref }}
+          path: _reusable-cicd
+          token: ${{ secrets.GH_PAT }}
 
       - name: Post diff as PR comment
         if: always()
@@ -141,33 +162,13 @@ jobs:
           DIFF_PATH: /tmp/argocd-diff/output/diff.md
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Inline: caller workspace is not reusable-cicd; cannot require repo-local JS.
           script: |
-            const fs = require('fs');
-            const diffPath = process.env.DIFF_PATH;
-            let body = fs.existsSync(diffPath)
-              ? fs.readFileSync(diffPath, 'utf8')
-              : '> **argocd-diff-preview**: no diff output found — check the workflow logs.';
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const existing = comments.find(
-              (c) => c.user.type === 'Bot' && c.body.includes('argocd-diff-preview')
+            const path = require('path');
+            const scriptPath = path.join(
+              process.env.GITHUB_WORKSPACE,
+              '_reusable-cicd',
+              '.github',
+              'scripts',
+              'post-argocd-diff-comment.js'
             );
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }
+            await require(scriptPath)({ github, context });

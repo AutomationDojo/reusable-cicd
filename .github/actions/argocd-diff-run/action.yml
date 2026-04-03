@@ -44,6 +44,10 @@ inputs:
     description: Optional — SOPS age key material for helm-secrets; set from a workflow secret in the caller
     required: false
     default: ''
+  max_diff_length:
+    description: argocd-diff-preview --max-diff-length (chars in diff.md); PR comments are split separately to fit GitHub API
+    required: false
+    default: '1048576'
 runs:
   using: composite
   steps:
@@ -89,6 +93,7 @@ runs:
         RENDER_METHOD_IN: ${{ inputs.render_method }}
         TRAVERSE_APP_OF_APPS: ${{ inputs.traverse_app_of_apps }}
         FILE_REGEX: ${{ inputs.file_regex }}
+        MAX_DIFF_LENGTH: ${{ inputs.max_diff_length }}
       run: |
         mkdir -p /tmp/argocd-diff/output
         docker_args=(
@@ -99,6 +104,7 @@ runs:
           -v /tmp/argocd-diff/output:/output
           -v /tmp/argocd-diff/secrets:/secrets
           -e REPO -e TARGET_BRANCH -e BASE_BRANCH -e GITHUB_TOKEN -e TIMEOUT
+          -e MAX_DIFF_LENGTH
         )
         if [[ -n "${ARGOCD_CHART_VERSION:-}" ]]; then
           docker_args+=(-e ARGOCD_CHART_VERSION)
