@@ -1,0 +1,36 @@
+name: Post Argo CD diff preview PR comments
+description: >-
+  Publish argocd-diff-preview diff.md as one or more issue comments (split by <details> app and GitHub size limit).
+
+inputs:
+  github_token:
+    description: Token for issues API on the caller repo (e.g. secrets.GITHUB_TOKEN)
+    required: true
+  diff_path:
+    description: Absolute path to diff.md on the runner
+    required: true
+  workflow_run_url:
+    description: URL of this workflow run (first PR comment links here for full artifact download); empty skips the notice
+    required: false
+    default: ''
+  artifact_name:
+    description: Name of the uploaded artifact bundle (must match upload-artifact name)
+    required: false
+    default: argocd-diff-preview
+
+runs:
+  using: composite
+  steps:
+    - name: Post diff as PR comment(s)
+      uses: actions/github-script@v7
+      env:
+        DIFF_PATH: ${{ inputs.diff_path }}
+        ADP_COMMENT_SCRIPT_DIR: ${{ github.action_path }}
+        WORKFLOW_RUN_URL: ${{ inputs.workflow_run_url }}
+        ARTIFACT_NAME: ${{ inputs.artifact_name }}
+      with:
+        github-token: ${{ inputs.github_token }}
+        script: |
+          const path = require('path');
+          const scriptPath = path.join(process.env.ADP_COMMENT_SCRIPT_DIR, 'post-argocd-diff-comment.js');
+          await require(scriptPath)({ github, context });

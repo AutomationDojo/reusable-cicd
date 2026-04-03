@@ -17,6 +17,11 @@ A collection of reusable GitHub Actions workflows and composite actions for comm
 - [Helm Releaser](workflows/helm-releaser.md) — Automate packaging and publishing of Helm charts to GitHub Pages.
 - [ArgoCD Diff Preview](workflows/argocd-diff-preview.md) — Generate ArgoCD manifest diffs on pull requests and post them as PR comments.
 
+## Composite actions
+
+- [Helm Repo Init](actions/helm-repo-init.md) — Bootstrap a chart repository from the helm chart template.
+- [ArgoCD Diff Preview](actions/argocd-diff-preview.md) — Building blocks for the Argo CD diff workflow (Helm prep + Docker run + PR comments).
+
 ## GitHub App requirements
 
 Most workflows that push commits, tags, or releases use a GitHub App token instead of the default `GITHUB_TOKEN`. They expect two secrets to be configured at the repository or organization level:
