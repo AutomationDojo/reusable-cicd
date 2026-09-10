@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.14.0...v1.15.0) (2026-09-10)
+
+
+### Features
+
+* **argocd-diff:** add comment_mode to post a single summary comment ([#29](https://github.com/AutomationDojo/reusable-cicd/issues/29)) ([172f0d2](https://github.com/AutomationDojo/reusable-cicd/commit/172f0d2a748dc274dcf86cb1972d77a471aa501f))
+
 # [1.14.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.13.2...v1.14.0) (2026-04-03)
 
 
