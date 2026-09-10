@@ -99,6 +99,7 @@ Wraps [`actions/github-script`](https://github.com/actions/github-script) and lo
 | `diff_path` | Absolute path to `diff.md` (e.g. `/tmp/argocd-diff/output/diff.md`). | **Yes** | — |
 | `workflow_run_url` | `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` so the first PR comment can link to **Artifacts**. | No | `''` |
 | `artifact_name` | Must match `upload-artifact` `name`; shown in the PR notice. | No | `argocd-diff-preview` |
+| `comment_mode` | `full` (one comment per Application) or `summary` (a single comment: summary, stats, link to the run). | No | `full` |
 
 ### Behaviour (summary)
 

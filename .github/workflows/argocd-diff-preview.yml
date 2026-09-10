@@ -56,6 +56,11 @@ on:
         required: false
         type: string
         default: ''
+      comment_mode:
+        description: PR comment style — full (one comment per Application) or summary (single comment with the summary plus a link to the run)
+        required: false
+        type: string
+        default: 'full'
       max_diff_length:
         description: Max characters in diff.md before argocd-diff-preview truncates (--max-diff-length); raise for large monorepos (PR comments are still split to ~64KB each)
         required: false
@@ -156,5 +161,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           diff_path: /tmp/argocd-diff/output/diff.md
+          comment_mode: ${{ inputs.comment_mode }}
           workflow_run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           artifact_name: argocd-diff-preview
