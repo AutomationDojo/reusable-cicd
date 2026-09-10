@@ -4,7 +4,9 @@ Reusable workflow that generates an ArgoCD manifest diff for pull requests and p
 
 This workflow is built from three **composite actions** (`argocd-diff-helm-template`, `argocd-diff-run`, `post-argocd-diff-comment`); see [**ArgoCD Diff Preview (composite actions)**](../actions/argocd-diff-preview.md) for inputs, secrets, and direct `uses:` examples.
 
-**PR comments:** the diff is published with the **issue comments** API (same thread as the PR conversation). The first run creates one or more comments; later runs **update** those comments when possible. If a new run produces **fewer** chunks than before, surplus bot comments are **deleted** — that requires `issues: write` (see [Caller permissions](#caller-permissions)). The post step uses **one GitHub comment per Argo CD Application** (each `<details>…</details>` block), plus separate comments for the summary preamble and trailing stats when present. If a single app is larger than ~64 KiB, only that app’s inner markdown is split into several comments, and each part repeats the `<details><summary>…</summary>` wrapper so the collapsible section (“spoiler”) still works.
+**PR comments:** with `comment_mode: summary` a single comment is posted (summary, stats and a link to the run) and the per-app diffs stay in the artifact; switching an existing PR from `full` to `summary` deletes the surplus comments on the next run. The rest of this section describes the default `full` mode.
+
+**PR comments (`full`):** the diff is published with the **issue comments** API (same thread as the PR conversation). The first run creates one or more comments; later runs **update** those comments when possible. If a new run produces **fewer** chunks than before, surplus bot comments are **deleted** — that requires `issues: write` (see [Caller permissions](#caller-permissions)). The post step uses **one GitHub comment per Argo CD Application** (each `<details>…</details>` block), plus separate comments for the summary preamble and trailing stats when present. If a single app is larger than ~64 KiB, only that app’s inner markdown is split into several comments, and each part repeats the `<details><summary>…</summary>` wrapper so the collapsible section (“spoiler”) still works.
 
 Supports two modes:
 
@@ -41,6 +43,7 @@ For private repos, pass `SSH_PRIVATE_KEY` and `REPO_SSH_URL` secrets. The caller
 | `render_method` | `cli`, `server-api`, or `repo-server-api`. Empty = tool default. Required `repo-server-api` if `traverse_app_of_apps` is true (enforced when traverse is set and this is empty). | No | — |
 | `traverse_app_of_apps` | Experimental expansion of child Applications (requires `repo-server-api`). Prefer Helm pre-render when children are templated. | No | `false` |
 | `file_regex` | Passed as `--file-regex` (e.g. only root app YAML when using traverse). | No | — |
+| `comment_mode` | PR comment style. `full` posts one comment per Application; `summary` posts a single comment with the summary, the stats and a link to the run, leaving the per-app diffs to the artifact. Useful on large app-of-apps repos where `full` produces a dozen or more comments per run. | No | `full` |
 | `max_diff_length` | Max size (characters) of `diff.md` before [argocd-diff-preview](https://github.com/dag-andersen/argocd-diff-preview) truncates (`--max-diff-length`). Defaults to 20 MiB for large app-of-apps repos; increase further if you still see the tool’s truncation warning. PR comment bodies are split separately (~64 KB per comment). | No | `20971520` |
 
 ## Secrets

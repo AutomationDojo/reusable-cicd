@@ -4,6 +4,8 @@
 // - If one app exceeds ~64KB, split its inner body only and repeat <details><summary>…</summary> on each part
 //   so every comment keeps the collapsible “spoiler”.
 // - splitContent() keeps ```diff fences balanced when splitting.
+// - comment_mode: 'summary' posts only the preamble + trailing stats as a single comment,
+//   leaving the per-app diffs to the run artifact (avoids long PR threads on big repos).
 const fs = require('fs');
 
 const MARKER_RE = /<!-- argocd-diff-preview part (\d+)\/(\d+) -->/;
@@ -193,9 +195,16 @@ function splitOversizedDetailsBlock(block) {
   return wrapped;
 }
 
-function chunkForPosting(raw) {
+function chunkForPosting(raw, summaryOnly = false) {
   const segments = splitByApplicationDetails(raw);
   if (!segments) return splitContent(raw);
+
+  if (summaryOnly) {
+    // segments is [preamble?, ...appBlocks, trailer?]; keep only the non-<details> ends.
+    const kept = segments.filter((seg) => !seg.trim().startsWith('<details>'));
+    const joined = kept.join('\n\n').trim();
+    return joined.length ? splitContent(joined) : splitContent(raw);
+  }
 
   const out = [];
   for (const seg of segments) {
@@ -210,14 +219,15 @@ function chunkForPosting(raw) {
   return out;
 }
 
-function buildBodies(chunks) {
+function buildBodies(chunks, summaryOnly = false) {
   const n = chunks.length;
   const runUrl = (process.env.WORKFLOW_RUN_URL || '').trim();
   const artifactName = (process.env.ARTIFACT_NAME || 'argocd-diff-preview').trim();
-  const linkBlock =
-    runUrl.length > 0
-      ? `📎 **Full output** (Markdown/HTML, etc.): open [this workflow run](${runUrl}), then download the **${artifactName}** artifact.\n\n---\n\n`
-      : '';
+  // In summary mode the per-app diffs never reach the thread, so say where they went.
+  const linkText = summaryOnly
+    ? `📎 **Per-app diffs and full output**: open [this workflow run](${runUrl}) and download the **${artifactName}** artifact.`
+    : `📎 **Full output** (Markdown/HTML, etc.): open [this workflow run](${runUrl}), then download the **${artifactName}** artifact.`;
+  const linkBlock = runUrl.length > 0 ? `${linkText}\n\n---\n\n` : '';
   return chunks.map((content, idx) => {
     const i = idx + 1;
     const header =
@@ -243,8 +253,9 @@ module.exports = async ({ github, context }) => {
     raw = '> **argocd-diff-preview**: no diff output found — check the workflow logs.';
   }
 
-  const chunks = chunkForPosting(raw);
-  const bodies = buildBodies(chunks);
+  const summaryOnly = (process.env.ADP_COMMENT_MODE || 'full').trim() === 'summary';
+  const chunks = chunkForPosting(raw, summaryOnly);
+  const bodies = buildBodies(chunks, summaryOnly);
 
   const owner = context.repo.owner;
   const repo = context.repo.repo;
