@@ -49,10 +49,10 @@ jobs:
       new-release: ${{ steps.semantic.outputs.new_release_published }}
       version: ${{ steps.semantic.outputs.new_release_version }}
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@v3
         id: app
         with:
-          app-id: ${{ secrets.GITHUB_APP_ID }}
+          client-id: ${{ secrets.GITHUB_APP_ID }}
           private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 
       - name: Setup Git (bot da App)
@@ -86,7 +86,7 @@ jobs:
         run: ${{ inputs.pre-install }}
 
       - id: semantic
-        uses: cycjimmy/semantic-release-action@v4
+        uses: cycjimmy/semantic-release-action@v7
         with:
           extra_plugins: ${{ inputs.extra-plugins }}
         env:
