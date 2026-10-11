@@ -1,3 +1,10 @@
+## [1.15.1](https://github.com/AutomationDojo/reusable-cicd/compare/v1.15.0...v1.15.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* update semantic-release-action to v7 and move actions to node24 ([#30](https://github.com/AutomationDojo/reusable-cicd/issues/30)) ([1e4b1db](https://github.com/AutomationDojo/reusable-cicd/commit/1e4b1db9707cc02cd1c5a5c37bd576effe0e657e))
+
 # [1.15.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.14.0...v1.15.0) (2026-09-10)
 
 
