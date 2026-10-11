@@ -50,7 +50,7 @@ jobs:
       - uses: actions/create-github-app-token@v3
         id: app
         with:
-          app-id: ${{ secrets.GITHUB_APP_ID }}
+          client-id: ${{ secrets.GITHUB_APP_ID }}
           private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 
       - name: Setup Git (bot da App)
@@ -84,7 +84,7 @@ jobs:
       - uses: actions/create-github-app-token@v3
         id: app
         with:
-          app-id: ${{ secrets.GITHUB_APP_ID }}
+          client-id: ${{ secrets.GITHUB_APP_ID }}
           private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
           repositories: ${{ inputs.homebrew-tap-repo }}
 
