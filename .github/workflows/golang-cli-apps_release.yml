@@ -68,7 +68,7 @@ jobs:
           node-version: ${{ inputs.node-version }}
 
       - id: semantic
-        uses: cycjimmy/semantic-release-action@v4
+        uses: cycjimmy/semantic-release-action@v7
         with:
           extra_plugins: |
             @semantic-release/changelog

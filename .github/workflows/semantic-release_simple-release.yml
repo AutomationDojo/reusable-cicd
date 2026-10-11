@@ -86,7 +86,7 @@ jobs:
         run: ${{ inputs.pre-install }}
 
       - id: semantic
-        uses: cycjimmy/semantic-release-action@v4
+        uses: cycjimmy/semantic-release-action@v7
         with:
           extra_plugins: ${{ inputs.extra-plugins }}
         env:
