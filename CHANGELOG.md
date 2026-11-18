@@ -1,3 +1,10 @@
+## [1.16.1](https://github.com/AutomationDojo/reusable-cicd/compare/v1.16.0...v1.16.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* pin internal composite actions to commit SHA ([#33](https://github.com/AutomationDojo/reusable-cicd/issues/33)) ([4252ad7](https://github.com/AutomationDojo/reusable-cicd/commit/4252ad7966181d16d4bc276ae2bd4d748bae25fe))
+
 # [1.16.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.15.1...v1.16.0) (2026-11-18)
 
 
