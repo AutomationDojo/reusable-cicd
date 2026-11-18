@@ -31,11 +31,11 @@ publish-chrome:
     contents: read
     id-token: write
   steps:
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: extension-packages
 
-    - uses: AutomationDojo/reusable-cicd/.github/actions/chrome-webstore-publish@main
+    - uses: AutomationDojo/reusable-cicd/.github/actions/chrome-webstore-publish@caed38801492a672fe8410fd30d5e43578bc185a # v1.16.0
       with:
         zip: my-extension-chrome.zip
         extension-id: abcdefghijklmnopabcdefghijklmnop

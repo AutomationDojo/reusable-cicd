@@ -98,8 +98,8 @@ jobs:
           fetch-depth: 0
 
       # workflow_call uses the caller repo as workspace; ./.github/actions would be wrong.
-      # Composites are pinned to @main; for local tests of action changes, temporarily use your branch.
-      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@main
+      # Composites are pinned to a release SHA (SHA pinning policy); for local tests of action changes, temporarily use your branch.
+      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@caed38801492a672fe8410fd30d5e43578bc185a # v1.16.0
         with:
           helm_chart_path: ${{ inputs.helm_chart_path }}
           helm_values_files: ${{ inputs.helm_values_files }}
@@ -124,14 +124,14 @@ jobs:
           ref: ${{ inputs.base_branch }}
           clean: false
 
-      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@main
+      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@caed38801492a672fe8410fd30d5e43578bc185a # v1.16.0
         with:
           helm_chart_path: ${{ inputs.helm_chart_path }}
           helm_values_files: ${{ inputs.helm_values_files }}
           repo_path: ${{ inputs.repo_path }}
           output_dir: /tmp/argocd-diff/base
 
-      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-run@main
+      - uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-run@caed38801492a672fe8410fd30d5e43578bc185a # v1.16.0
         with:
           repo: ${{ github.repository }}
           target_branch: ${{ github.head_ref }}
@@ -157,7 +157,7 @@ jobs:
 
       - name: Post diff as PR comment
         if: always()
-        uses: AutomationDojo/reusable-cicd/.github/actions/post-argocd-diff-comment@main
+        uses: AutomationDojo/reusable-cicd/.github/actions/post-argocd-diff-comment@caed38801492a672fe8410fd30d5e43578bc185a # v1.16.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           diff_path: /tmp/argocd-diff/output/diff.md

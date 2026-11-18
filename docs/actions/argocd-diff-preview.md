@@ -26,16 +26,16 @@ Runs `helm template … --output-dir` when `helm_chart_path` is set; otherwise c
 ### Direct usage
 
 ```yaml
-- uses: actions/checkout@v4
+- uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
-- uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@main
+- uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-helm-template@caed38801492a672fe8410fd30d5e43578bc185a # v1.16.0
   with:
     helm_chart_path: apps/
     helm_values_files: apps/values/prod.yaml
     output_dir: /tmp/argocd-diff/target
 ```
 
-Pin `@main` to the same ref as your reusable workflow (branch or tag).
+Actions must be pinned to a full-length commit SHA when the "Require actions to be pinned to a full-length commit SHA" policy is enabled; use the SHA of a release tag (e.g. `v1.16.0`). Reusable workflows can still use `@main` or a tag.
 
 ## argocd-diff-run
 
@@ -69,7 +69,7 @@ Composite actions do not use a top-level `secrets:` block in `action.yml`; treat
 ### Direct usage (skeleton)
 
 ```yaml
-- uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-run@main
+- uses: AutomationDojo/reusable-cicd/.github/actions/argocd-diff-run@caed38801492a672fe8410fd30d5e43578bc185a # v1.16.0
   with:
     repo: ${{ github.repository }}
     target_branch: ${{ github.head_ref }}
@@ -111,7 +111,7 @@ Wraps [`actions/github-script`](https://github.com/actions/github-script) and lo
 ### Direct usage
 
 ```yaml
-- uses: AutomationDojo/reusable-cicd/.github/actions/post-argocd-diff-comment@main
+- uses: AutomationDojo/reusable-cicd/.github/actions/post-argocd-diff-comment@caed38801492a672fe8410fd30d5e43578bc185a # v1.16.0
   if: always()
   with:
     github_token: ${{ secrets.GITHUB_TOKEN }}

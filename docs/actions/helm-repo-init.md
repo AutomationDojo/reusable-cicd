@@ -14,10 +14,10 @@ It runs `helm create`, substitutes `CHART_NAME`/`GITHUB_OWNER` placeholders acro
 
 ```yaml
 - name: Set up Helm
-  uses: azure/setup-helm@v4
+  uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
 
 - name: Initialise chart
-  uses: AutomationDojo/reusable-cicd/helm/repo-init@main
+  uses: AutomationDojo/reusable-cicd/helm/repo-init@caed38801492a672fe8410fd30d5e43578bc185a # v1.16.0
   with:
     commit-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -50,17 +50,17 @@ jobs:
 
       - name: Checkout
         if: steps.check.outputs.skip == 'false'
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Helm
         if: steps.check.outputs.skip == 'false'
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
 
       - name: Initialise chart
         if: steps.check.outputs.skip == 'false'
-        uses: AutomationDojo/reusable-cicd/helm/repo-init@main
+        uses: AutomationDojo/reusable-cicd/helm/repo-init@caed38801492a672fe8410fd30d5e43578bc185a # v1.16.0
         with:
           commit-token: ${{ secrets.GITHUB_TOKEN }}
 ```
