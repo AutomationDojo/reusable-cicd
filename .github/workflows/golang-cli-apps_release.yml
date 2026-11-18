@@ -47,7 +47,7 @@ jobs:
       new-release: ${{ steps.semantic.outputs.new_release_published }}
       version: ${{ steps.semantic.outputs.new_release_version }}
     steps:
-      - uses: actions/create-github-app-token@v3
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         id: app
         with:
           client-id: ${{ secrets.GITHUB_APP_ID }}
@@ -58,17 +58,17 @@ jobs:
           git config --global user.name "${{ steps.app.outputs.app-slug }}[bot]"
           git config --global user.email "${{ steps.app.outputs.app-slug }}[bot]@users.noreply.github.com"
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
           token: ${{ steps.app.outputs.token }}
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ inputs.node-version }}
 
       - id: semantic
-        uses: cycjimmy/semantic-release-action@v7
+        uses: cycjimmy/semantic-release-action@1989a0fefc4aea321e07f717680ed8e345925dc1 # v7.1.2
         with:
           extra_plugins: |
             @semantic-release/changelog
@@ -81,25 +81,25 @@ jobs:
     needs: release
     if: needs.release.outputs.new-release == 'true'
     steps:
-      - uses: actions/create-github-app-token@v3
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         id: app
         with:
           client-id: ${{ secrets.GITHUB_APP_ID }}
           private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
           repositories: ${{ inputs.homebrew-tap-repo }}
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
           ref: v${{ needs.release.outputs.version }}
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: ${{ inputs.go-version-file }}
           cache-dependency-path: ${{ inputs.go-sum-file }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v7
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
         with:
           version: ${{ inputs.goreleaser-version }}
           args: release --clean

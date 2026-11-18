@@ -26,20 +26,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/create-github-app-token@v3
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         id: app
         with:
           client-id: ${{ secrets.GITHUB_APP_ID }}
           private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 
       - name: Checkout source
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
           token: ${{ steps.app.outputs.token }}
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -52,7 +52,7 @@ jobs:
           mkdocs build
 
       - name: Checkout pages branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: ${{ inputs.pages-branch }}
           path: pages
