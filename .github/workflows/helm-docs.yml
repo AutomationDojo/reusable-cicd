@@ -47,7 +47,7 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v3
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         id: app
         if: inputs.git_push
         with:
@@ -61,7 +61,7 @@ jobs:
           git config --global user.email "${{ steps.app.outputs.app-slug }}[bot]@users.noreply.github.com"
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: ${{ github.event.pull_request.head.ref || github.ref }}
           fetch-depth: 0
@@ -74,7 +74,7 @@ jobs:
         run: git pull --rebase origin "$BRANCH"
 
       - name: Run helm-docs
-        uses: losisin/helm-docs-github-action@v1
+        uses: losisin/helm-docs-github-action@2ccf3e77eb70dc80d62f8cc26f15d0a96b75fef4 # v1.8.0
         with:
           chart-search-root: ${{ inputs.chart_search_root }}
           output-file: ${{ inputs.output_file }}
