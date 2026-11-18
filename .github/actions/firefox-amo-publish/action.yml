@@ -1,0 +1,45 @@
+name: Publish to addons.mozilla.org
+description: >-
+  Submit an extension zip to addons.mozilla.org (AMO) with web-ext sign, without waiting for the review.
+
+inputs:
+  zip:
+    description: Path to the extension zip (must contain the Firefox manifest)
+    required: true
+  api-key:
+    description: AMO JWT issuer
+    required: true
+  api-secret:
+    description: AMO JWT secret
+    required: true
+  channel:
+    description: AMO channel (listed or unlisted)
+    required: false
+    default: listed
+  node-version:
+    description: Node.js version used to run web-ext
+    required: false
+    default: "24"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    # web-ext signs a directory, so unpack the zip first
+    - name: Submit to addons.mozilla.org
+      shell: bash
+      env:
+        # renovate: datasource=npm depName=web-ext
+        WEB_EXT_VERSION: 10.8.0
+        WEB_EXT_API_KEY: ${{ inputs.api-key }}
+        WEB_EXT_API_SECRET: ${{ inputs.api-secret }}
+        ZIP: ${{ inputs.zip }}
+        CHANNEL: ${{ inputs.channel }}
+      run: |
+        src="$RUNNER_TEMP/amo-source"
+        rm -rf "$src"
+        unzip -q "$ZIP" -d "$src"
+        npx --yes "web-ext@$WEB_EXT_VERSION" sign --source-dir "$src" --channel "$CHANNEL" --approval-timeout 0
