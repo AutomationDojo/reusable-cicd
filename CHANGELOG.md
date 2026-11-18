@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/AutomationDojo/reusable-cicd/compare/v1.15.1...v1.16.0) (2026-11-18)
+
+
+### Features
+
+* add release-please workflow and browser extension store publish actions ([#32](https://github.com/AutomationDojo/reusable-cicd/issues/32)) ([cc9c516](https://github.com/AutomationDojo/reusable-cicd/commit/cc9c5166503008f0e542463cc88fb46a916c56ff))
+
 ## [1.15.1](https://github.com/AutomationDojo/reusable-cicd/compare/v1.15.0...v1.15.1) (2026-10-11)
 
 
