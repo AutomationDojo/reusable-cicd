@@ -26,6 +26,8 @@ nav:
   - Actions:
       - Helm Repo Init: actions/helm-repo-init.md
       - ArgoCD Diff Preview: actions/argocd-diff-preview.md
+      - Chrome Web Store Publish: actions/chrome-webstore-publish.md
+      - Firefox AMO Publish: actions/firefox-amo-publish.md
   - Workflows:
       - Actionlint: workflows/actionlint.md
       - Cloudflare Pages Cleanup: workflows/cloudflare-pages-cleanup.md
@@ -35,6 +37,7 @@ nav:
       - MkDocs + Helm Pages: workflows/mkdoc-helm_deploy.md
       - Node Build and Test: workflows/node-build-and-test.md
       - Node Release: workflows/node-release.md
+      - Release Please: workflows/release-please.md
       - Simple Semantic Release: workflows/semantic-release-simple.md
       - Terraform Docs: workflows/terraform-docs.md
       - Helm Lint: workflows/helm-lint.md

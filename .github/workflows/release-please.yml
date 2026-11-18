@@ -1,0 +1,55 @@
+# Reusable workflow for release-please.
+# Uses a GitHub App token so release PRs opened by release-please trigger CI.
+name: Release Please
+
+on:
+  workflow_call:
+    inputs:
+      config-file:
+        description: "Path to the release-please config file"
+        type: string
+        default: "release-please-config.json"
+      manifest-file:
+        description: "Path to the release-please manifest file"
+        type: string
+        default: ".release-please-manifest.json"
+    outputs:
+      release-created:
+        description: "Whether a release was created ('true' or empty)"
+        value: ${{ jobs.release-please.outputs.release-created }}
+      tag-name:
+        description: "The tag of the created release"
+        value: ${{ jobs.release-please.outputs.tag-name }}
+      version:
+        description: "The version of the created release"
+        value: ${{ jobs.release-please.outputs.version }}
+    secrets:
+      GITHUB_APP_ID:
+        description: "GitHub App ID"
+        required: true
+      GITHUB_APP_PRIVATE_KEY:
+        description: "GitHub App private key"
+        required: true
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      release-created: ${{ steps.release.outputs.release_created }}
+      tag-name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        id: app
+        with:
+          client-id: ${{ secrets.GITHUB_APP_ID }}
+          private-key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+        with:
+          token: ${{ steps.app.outputs.token }}
+          config-file: ${{ inputs.config-file }}
+          manifest-file: ${{ inputs.manifest-file }}
